@@ -198,6 +198,7 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
                                  mySchedule: mySchedule)
         
         delegate?.newTrackerCreated(newTracker)
+        createButton.backgroundColor = .black
     }
     
     @objc private func textFieldDidChange() {
