@@ -9,7 +9,10 @@ import UIKit
 
 final class TrackerViewController: UIViewController {
     
+    // MARK: - Public Properties
     var currentDate: Date = Date()
+    
+    // MARK: - Private Properties
     private var categories: [TrackerCategory] = []
     private var completedTrackers: [TrackerRecord] = []
     private var trackersId = Set<UUID>()
@@ -105,6 +108,7 @@ final class TrackerViewController: UIViewController {
         return label
     }()
     
+    // MARK: - View Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.white
@@ -122,6 +126,7 @@ final class TrackerViewController: UIViewController {
         view.addGestureRecognizer(tapGesture)
     }
     
+    // MARK: - Private Methods
     private func setupUI() {
         pictureStackView.addArrangedSubview(pictureImageView)
         pictureStackView.addArrangedSubview(pictureText)
@@ -205,6 +210,7 @@ final class TrackerViewController: UIViewController {
     }
 }
 
+// MARK: TrackerCreatirDelegate
 extension TrackerViewController: TrackerCreatorDelegate {
     func newTrackerCreated(_ tracker: Tracker) {
         let newCategory = TrackerCategory(title: "Новая категория", trackers: [tracker])
@@ -218,6 +224,7 @@ extension TrackerViewController: TrackerCreatorDelegate {
     }
 }
 
+// MARK: UICollectionViewDataSource
 extension TrackerViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         categories.count
@@ -257,6 +264,7 @@ extension TrackerViewController: UICollectionViewDataSource {
     }
 }
 
+// MARK: UICollectionViewDelegateFlowLayout
 extension TrackerViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: (collectionView.bounds.width - 9) / 2, height: 148)
@@ -271,6 +279,7 @@ extension TrackerViewController: UICollectionViewDelegateFlowLayout {
     }
 }
 
+// MARK: TrackerCellDelegate
 extension TrackerViewController: TrackerCellDelegate {
     
     func trackerCellDelegate(id: UUID) {
@@ -291,18 +300,21 @@ extension TrackerViewController: TrackerCellDelegate {
     }
 }
 
+// MARK: UISearchResultsUpdating
 extension TrackerViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         filters()
     }
 }
 
+// MARK: UISearchControllerDelegate
 extension TrackerViewController: UISearchControllerDelegate {
     func didDismissSearchController(_ searchController: UISearchController) {
         filterDataByDate()
     }
 }
 
+// MARK: NewHabitViewControllerDelegate
 extension TrackerViewController: NewHabitViewControllerDelegate {
     func didAddNewTracker(_ newTracker: Tracker) {
         trackerCollectionView.reloadData()

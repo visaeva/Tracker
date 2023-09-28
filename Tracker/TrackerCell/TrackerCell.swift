@@ -12,9 +12,12 @@ protocol TrackerCellDelegate: AnyObject {
 }
 
 final class TrackerCell: UICollectionViewCell {
-    static let cellID = "cellID"
-    weak var delegate: TrackerCellDelegate? = nil
     
+    // MARK: - Public Properties
+    static let cellID = "cellID"
+    weak var delegate: TrackerCellDelegate?
+    
+    // MARK: - Private Properties
     private var viewModel: TrackerCellViewModel? {
         didSet {
             trackerView.backgroundColor = viewModel?.color
@@ -89,9 +92,11 @@ final class TrackerCell: UICollectionViewCell {
         return button
     }()
     
+    // MARK: - Initializers
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupViews()
+        setupConstraints()
     }
     
     required init?(coder: NSCoder) {
@@ -99,6 +104,12 @@ final class TrackerCell: UICollectionViewCell {
         super.init(coder: coder)
     }
     
+    // MARK: - Public Methods
+    func configure(model: TrackerCellViewModel) {
+        self.viewModel = model
+    }
+    
+    // MARK: - Private Methods
     private func setupViews() {
         contentView.addSubview(trackerView)
         contentView.addSubview(managementView)
@@ -107,7 +118,9 @@ final class TrackerCell: UICollectionViewCell {
         emojiView.addSubview(emojiLabel)
         managementView.addSubview(counterLabel)
         managementView.addSubview(doneButton)
-        
+    }
+    
+    private func setupConstraints() {
         NSLayoutConstraint.activate([
             trackerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             trackerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
@@ -142,10 +155,6 @@ final class TrackerCell: UICollectionViewCell {
         ])
     }
     
-    func configure(model: TrackerCellViewModel) {
-        self.viewModel = model
-    }
-    
     @objc func doneButtonTapped() {
         if let trackerIsDone = viewModel?.trackerIsDone, trackerIsDone  {
             viewModel?.counter -= 1
@@ -157,6 +166,7 @@ final class TrackerCell: UICollectionViewCell {
     }
 }
 
+// MARK: UInt
 extension UInt {
     func days() -> String {
         let secondDigitFromEnd = (self / 10) % 10

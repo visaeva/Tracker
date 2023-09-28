@@ -13,11 +13,14 @@ protocol NewHabitViewControllerDelegate: AnyObject {
 
 final class NewHabitViewController: UIViewController, UITableViewDelegate {
     
+    // MARK: - Public Properties
     var myCategories: [TrackerCategory] = []
     weak var delegate: NewHabitViewControllerDelegate?
+    
+    // MARK: - Private Properties
     private var mySchedule: Set<WeekDay> = []
-    private let tracker = false
     private var trackersScheduleViewController: TrackersSheduleViewController?
+    private let tracker = false
     
     private let newHabitLabel: UILabel = {
         let label = UILabel()
@@ -100,6 +103,7 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         return label
     }()
     
+    // MARK: - View Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -124,6 +128,7 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         view.endEditing(true)
     }
     
+    // MARK: - Private Methods
     private func setupHabitUI() {
         view.addSubview(nameTextField)
         view.addSubview(tableView)
@@ -209,7 +214,7 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         }
     }
 }
-
+// MARK: UITableViewDataSource
 extension NewHabitViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return 2
@@ -264,7 +269,12 @@ extension NewHabitViewController: UITableViewDataSource {
                     scheduleLabel.textAlignment = .left
                 }
                 
-                NSLayoutConstraint.activate([scheduleLabelTopConstraint, scheduleLabelLeadingConstraint, daysLabelTopConstraint, daysLabelLeadingConstraint, daysLabelBottomConstraint])
+                NSLayoutConstraint.activate([
+                    scheduleLabelTopConstraint,
+                    scheduleLabelLeadingConstraint,
+                    daysLabelTopConstraint,
+                    daysLabelLeadingConstraint,
+                    daysLabelBottomConstraint])
                 
             default:
                 break
@@ -307,6 +317,7 @@ extension NewHabitViewController: UITableViewDataSource {
     }
 }
 
+// MARK: TrackerSchedueViewControllerDelegate
 extension NewHabitViewController: TrackerScheduleViewControllerDelegate {
     func selectDays(in schedule: Set<WeekDay>) {
         self.mySchedule = schedule
@@ -315,6 +326,7 @@ extension NewHabitViewController: TrackerScheduleViewControllerDelegate {
     }
 }
 
+// MARK: UITextFieldDelegate
 extension NewHabitViewController: UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         let currentText = textField.text ?? ""

@@ -14,9 +14,11 @@ protocol TrackerCreatorDelegate: AnyObject {
 
 final class TrackerCreatorViewController: UIViewController {
     
+    // MARK: - Public Properties
     weak var delegate: TrackerCreatorDelegate?
     var myCategories: [TrackerCategory] = []
     
+    // MARK: - Private Properties
     private let topLabel: UILabel = {
         let label = UILabel()
         label.text = "Создание трекера"
@@ -49,6 +51,7 @@ final class TrackerCreatorViewController: UIViewController {
         return button
     }()
     
+    // MARK: - Initializers
     init(delegate: TrackerCreatorDelegate?) {
         self.delegate = delegate
         super.init(nibName: nil, bundle: nil)
@@ -59,6 +62,7 @@ final class TrackerCreatorViewController: UIViewController {
         super.init(coder: coder)
     }
     
+    // MARK: - View Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -67,6 +71,7 @@ final class TrackerCreatorViewController: UIViewController {
         setupConstraints()
     }
     
+    // MARK: - Private Methods
     private func setupCreatorUI() {
         view.addSubview(habitButton)
         view.addSubview(eventButton)
@@ -112,6 +117,7 @@ final class TrackerCreatorViewController: UIViewController {
     }
 }
 
+// MARK: NewHabitViewControllerDelegate
 extension TrackerCreatorViewController: NewHabitViewControllerDelegate {
     func newTrackerCreated(_ tracker: Tracker) {
         delegate?.newTrackerCreated(tracker)

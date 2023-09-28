@@ -8,8 +8,11 @@
 import UIKit
 
 final class TrackerHeader: UICollectionReusableView {
+    
+    // MARK: - Public Properties
     static var header = "header"
     
+    // MARK: - Private Properties
     private var headerLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -17,6 +20,7 @@ final class TrackerHeader: UICollectionReusableView {
         return label
     }()
     
+    // MARK: - Initializers
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupLabelViews()
@@ -27,10 +31,12 @@ final class TrackerHeader: UICollectionReusableView {
         super.init(coder: coder)
     }
     
+    // MARK: - Public Methods
     func configure(headerText: String) {
         headerLabel.text = headerText
     }
     
+    // MARK: - Private Methods
     private func setupLabelViews() {
         addSubview(headerLabel)
         

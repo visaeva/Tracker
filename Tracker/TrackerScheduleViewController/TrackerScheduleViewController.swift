@@ -13,9 +13,11 @@ protocol TrackerScheduleViewControllerDelegate: AnyObject {
 
 final class TrackersSheduleViewController: UIViewController {
     
+    // MARK: - Public Properties
     weak var delegate: TrackerScheduleViewControllerDelegate?
     var mySchedule: Set<WeekDay> = []
     
+    // MARK: - Private Properties
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -48,6 +50,7 @@ final class TrackersSheduleViewController: UIViewController {
         return button
     }()
     
+    // MARK: - Initializers
     init(delegate: TrackerScheduleViewControllerDelegate?, schedule: Set<WeekDay>) {
         self.delegate = delegate
         self.mySchedule = schedule
@@ -59,6 +62,7 @@ final class TrackersSheduleViewController: UIViewController {
         super.init(coder: coder)
     }
     
+    // MARK: - View Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -66,6 +70,7 @@ final class TrackersSheduleViewController: UIViewController {
         setupSheduleConstraints()
     }
     
+    // MARK: - Private Methods
     private func setupUI() {
         view.addSubview(titleLabel)
         view.addSubview(tableView)
@@ -99,6 +104,7 @@ final class TrackersSheduleViewController: UIViewController {
     }
 }
 
+// MARK: UITableViewDataSource
 extension TrackersSheduleViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -119,6 +125,7 @@ extension TrackersSheduleViewController: UITableViewDataSource {
     }
 }
 
+// MARK: TrackerScheduleTableViewDelegate
 extension TrackersSheduleViewController: TrackersScheduleTableViewDelegate {
     func switchValueChanged(_ isOn: Bool, at row: Int) {
         if let day = WeekDay(rawValue: row ) {

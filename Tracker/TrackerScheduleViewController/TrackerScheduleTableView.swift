@@ -13,7 +13,10 @@ protocol TrackersScheduleTableViewDelegate: AnyObject {
 
 final class TrackerScheduleTableView: UITableViewCell {
     
+    // MARK: - Public Properties
     weak var delegate: TrackersScheduleTableViewDelegate?
+    
+    // MARK: - Private Properties
     private var row: Int!
     
     private let switchTap: UISwitch = {
@@ -23,6 +26,7 @@ final class TrackerScheduleTableView: UITableViewCell {
         return switchTap
     }()
     
+    // MARK: - Public Methods
     func configure(at row: Int, isOn: Bool) {
         self.row = row
         switchTap.isOn = isOn
