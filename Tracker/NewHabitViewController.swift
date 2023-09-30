@@ -14,7 +14,7 @@ protocol NewHabitViewControllerDelegate: AnyObject {
 final class NewHabitViewController: UIViewController, UITableViewDelegate {
     
     // MARK: - Public Properties
-    var myCategories: [TrackerCategory] = []
+    var categories: [TrackerCategory] = []
     weak var delegate: NewHabitViewControllerDelegate?
     
     // MARK: - Private Properties

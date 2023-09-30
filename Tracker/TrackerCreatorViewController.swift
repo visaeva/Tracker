@@ -16,7 +16,7 @@ final class TrackerCreatorViewController: UIViewController {
     
     // MARK: - Public Properties
     weak var delegate: TrackerCreatorDelegate?
-    var myCategories: [TrackerCategory] = []
+    var categories: [TrackerCategory] = []
     
     // MARK: - Private Properties
     private let topLabel: UILabel = {
@@ -101,7 +101,7 @@ final class TrackerCreatorViewController: UIViewController {
         
         let newHabitViewController = NewHabitViewController()
         newHabitViewController.delegate = self
-        newHabitViewController.myCategories = myCategories
+        newHabitViewController.categories = categories
         addChild(newHabitViewController)
         view.addSubview(newHabitViewController.view)
         newHabitViewController.didMove(toParent: self)

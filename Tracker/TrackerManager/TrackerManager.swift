@@ -16,6 +16,7 @@ class TrackerManager {
     static let shared = TrackerManager()
     private var completedTrackers: [CompletedTracker] = []
     
+    // MARK: - Public Methods
     func markTrackerAsCompleted(trackerId: UUID, date: Date) {
         let completedTracker = CompletedTracker(trackerId: trackerId, date: date)
         completedTrackers.append(completedTracker)

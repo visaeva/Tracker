@@ -11,6 +11,8 @@ protocol TrackerCellDelegate: AnyObject {
     func trackerCellDelegate(id: UUID)
 }
 
+
+
 final class TrackerCell: UICollectionViewCell {
     
     // MARK: - Public Properties
@@ -20,21 +22,33 @@ final class TrackerCell: UICollectionViewCell {
     // MARK: - Private Properties
     private var viewModel: TrackerCellViewModel? {
         didSet {
-            trackerView.backgroundColor = viewModel?.color
-            nameLabel.text = viewModel?.name ?? ""
-            emojiLabel.text = viewModel?.emoji ?? ""
-            counterLabel.text = "\(viewModel?.counter ?? 0) \(viewModel?.counter.days() ?? "")"
-            doneButton.backgroundColor = viewModel?.color
-            doneButton.isEnabled = viewModel?.doneButtonIsEnabled ?? false
-            doneButton.layer.opacity = viewModel?.doneButtonIsEnabled ?? false == true ? 1 : 0.3
-            var image: UIImage? = nil
-            if let trackerIsDone = viewModel?.trackerIsDone, trackerIsDone {
-                image = UIImage(systemName: "checkmark")
-            } else {
-                image = UIImage(systemName: "plus")
-            }
-            doneButton.setImage(image?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+            updateTrackerView()
+            updateLabels()
+            updateDoneButton()
         }
+    }
+    
+    private func updateTrackerView() {
+        trackerView.backgroundColor = viewModel?.color
+    }
+    
+    private func updateLabels() {
+        nameLabel.text = viewModel?.name ?? ""
+        emojiLabel.text = viewModel?.emoji ?? ""
+        counterLabel.text = "\(viewModel?.counter ?? 0) \(viewModel?.counter.days() ?? "")"
+    }
+    
+    private func updateDoneButton() {
+        doneButton.backgroundColor = viewModel?.color
+        doneButton.isEnabled = viewModel?.doneButtonIsEnabled ?? false
+        doneButton.layer.opacity = viewModel?.doneButtonIsEnabled ?? false == true ? 1 : 0.3
+        var image: UIImage? = nil
+        if let trackerIsDone = viewModel?.trackerIsDone, trackerIsDone {
+            image = UIImage(systemName: "checkmark")
+        } else {
+            image = UIImage(systemName: "plus")
+        }
+        doneButton.setImage(image?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
     }
     
     private lazy var trackerView: UIView = {
@@ -181,3 +195,4 @@ extension UInt {
         return ""
     }
 }
+

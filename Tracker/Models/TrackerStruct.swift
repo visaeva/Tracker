@@ -1,5 +1,5 @@
 //
-//  TrackerCellStruct.swift
+//  TrackerStruct.swift
 //  Tracker
 //
 //  Created by Victoria Isaeva on 26.09.2023.
