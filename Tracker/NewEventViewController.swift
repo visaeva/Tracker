@@ -277,7 +277,7 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
             } else {
                 let selectedDays = mySchedule
                     .sorted(by: { $0.rawValue < $1.rawValue })
-                    .map { WeekDay.shortNameDay(for: $0.rawValue) }
+                    .map {$0.shortDayName }
                 daysLabel.isHidden = false
                 daysLabel.text = selectedDays.joined(separator: ", ")
             }

@@ -35,7 +35,6 @@ final class TrackerStore: NSObject {
     // MARK: - Private Properties
     private let context: NSManagedObjectContext
     private let uiColorMarshalling = UIColorMarshalling()
-    private let daysTransformer = DaysTransformer()
     
     private lazy var fetchedResultController: NSFetchedResultsController<TrackerCoreData> = {
         let request = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")
@@ -72,7 +71,7 @@ final class TrackerStore: NSObject {
         trackerCoreData.name = tracker.name
         trackerCoreData.color = uiColorMarshalling.hexString(from: tracker.color)
         trackerCoreData.emoji = tracker.emoji
-        trackerCoreData.mySchedule = daysTransformer.convertSetToMyScheduleString(tracker.mySchedule)
+        trackerCoreData.mySchedule = tracker.mySchedule.map { $0.rawValue }.map(String.init).joined(separator: ",")
         trackerCoreData.records = []
         saveContext()
         return trackerCoreData
@@ -106,13 +105,13 @@ final class TrackerStore: NSObject {
             print("Failed to retrieve necessary data from CoreData")
             throw TrackerStoreError.error }
         
-        let mySchedule = daysTransformer.convertMyScheduleStringToSet(myScheduleString)
+        let mySchedule = myScheduleString.split(separator: ",").compactMap { Int($0) }.compactMap { WeekDay(rawValue: $0) }
         
         return Tracker(id: id,
                        name: name,
                        color: uiColorMarshalling.color(from: color),
                        emoji: emoji,
-                       mySchedule: mySchedule,
+                       mySchedule: Set(mySchedule),
                        records: [])
     }
     
