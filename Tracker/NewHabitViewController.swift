@@ -302,10 +302,16 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
             return
         }
         
+        guard let selectedEmojiIndex = selectedEmojiIndex, selectedEmojiIndex >= 0, selectedEmojiIndex < emoji.count else { return }
+        guard let selectedColorIndex = selectedColorIndex, selectedColorIndex >= 0, selectedColorIndex < colors.count else { return }
+        
+        let emojiForTracker = emoji[selectedEmojiIndex]
+        let colorForTracker = colors[selectedColorIndex]
+        
         let newTracker = Tracker(id: UUID(),
                                  name: name,
-                                 color: .orange,
-                                 emoji: "❤️",
+                                 color: colorForTracker,
+                                 emoji: emojiForTracker,
                                  mySchedule: mySchedule, records: [])
         
         delegate?.newTrackerCreated(newTracker)

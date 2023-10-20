@@ -168,7 +168,7 @@ final class TrackerCell: UICollectionViewCell {
             counterLabel.trailingAnchor.constraint(equalTo: doneButton.leadingAnchor, constant: -8)
         ])
     }
-    //doneButton
+    
     @objc func doneButtonTapped() {
         cellTapAction?()
     }

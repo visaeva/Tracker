@@ -84,7 +84,7 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
         button.layer.borderColor = UIColor(named: "Red")?.cgColor
         button.layer.borderWidth = 1
         button.layer.cornerRadius = 16
-        button.addTarget(NewEventViewController.self, action: #selector(cancelButtonTapped), for: .touchUpInside)
+        button.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
         return button
     }()
     
@@ -95,7 +95,7 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = UIColor(named: "BackgroundGray")
         button.layer.cornerRadius = 16
-        button.addTarget(NewEventViewController.self, action: #selector(createButtonTapped), for: .touchUpInside)
+        button.addTarget(self, action: #selector(createButtonTapped), for: .touchUpInside)
         return button
     }()
     
@@ -292,10 +292,15 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
         guard let name = nameTextField.text, !name.isEmpty else { return }
         let mySchedule: Set<WeekDay> = Set([.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday])
         
+        guard let selectedEmojiIndex = selectedEmojiIndex, selectedEmojiIndex >= 0, selectedEmojiIndex < emoji.count else { return }
+        guard let selectedColorIndex = selectedColorIndex, selectedColorIndex >= 0, selectedColorIndex < colors.count else { return }
+        
+        let emojiForTracker = emoji[selectedEmojiIndex]
+        let colorForTracker = colors[selectedColorIndex]
         let newTracker = Tracker(id: UUID(),
                                  name: name,
-                                 color: .blue,
-                                 emoji: "❤️",
+                                 color: colorForTracker,
+                                 emoji: emojiForTracker,
                                  mySchedule: mySchedule, records: [])
         
         delegate?.newEventTrackerCreated(newTracker)
