@@ -11,13 +11,13 @@ protocol TrackerCellDelegate: AnyObject {
     func trackerCellDelegate(id: UUID)
 }
 
-
-
 final class TrackerCell: UICollectionViewCell {
     
     // MARK: - Public Properties
     static let cellID = "cellID"
     weak var delegate: TrackerCellDelegate?
+    var trackerRecordStore: TrackerRecordStore?
+    var cellTapAction: (() -> Void)?
     
     // MARK: - Private Properties
     private var viewModel: TrackerCellViewModel? {
@@ -170,16 +170,9 @@ final class TrackerCell: UICollectionViewCell {
     }
     
     @objc func doneButtonTapped() {
-        if let trackerIsDone = viewModel?.trackerIsDone, trackerIsDone  {
-            viewModel?.counter -= 1
-        } else {
-            viewModel?.counter += 1
-        }
-        delegate?.trackerCellDelegate(id: viewModel?.id ?? UUID())
-        viewModel?.trackerIsDone.toggle()
+        cellTapAction?()
     }
 }
-
 // MARK: UInt
 extension UInt {
     func days() -> String {

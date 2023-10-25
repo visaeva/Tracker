@@ -17,6 +17,8 @@ final class TrackerCreatorViewController: UIViewController {
     // MARK: - Public Properties
     weak var delegate: TrackerCreatorDelegate?
     var categories: [TrackerCategory] = []
+    var trackerStore: TrackerStore?
+    
     
     // MARK: - Private Properties
     private let topLabel: UILabel = {
@@ -111,6 +113,8 @@ final class TrackerCreatorViewController: UIViewController {
         delegate?.didSelectTrackerType("Нерегулярное событие")
         
         let newEventViewController = NewEventViewController()
+        newEventViewController.delegate = self
+        newEventViewController.categories = categories
         addChild(newEventViewController)
         view.addSubview(newEventViewController.view)
         newEventViewController.didMove(toParent: self)
@@ -121,5 +125,26 @@ final class TrackerCreatorViewController: UIViewController {
 extension TrackerCreatorViewController: NewHabitViewControllerDelegate {
     func newTrackerCreated(_ tracker: Tracker) {
         delegate?.newTrackerCreated(tracker)
+        
+        guard let trackerStore = trackerStore else { return }
+        do {
+            let trackerCoreData = try trackerStore.createTracker(from: tracker)
+        } catch {
+            print("Ошибка при сохранении трекера в CoreData: \(error)")
+        }
+    }
+}
+
+// MARK: NewEventViewControllerDelegate
+extension TrackerCreatorViewController: NewEventViewControllerDelegate {
+    func newEventTrackerCreated(_ tracker: Tracker) {
+        delegate?.newTrackerCreated(tracker)
+        
+        guard let trackerStore = try trackerStore else { return }
+        do {
+            let trackerCoreData = try trackerStore.createTracker(from: tracker)
+        } catch {
+            print("Ошибка при сохранении нерегулярного события в CoreData: \(error)")
+        }
     }
 }

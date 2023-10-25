@@ -15,33 +15,10 @@ final class TrackerViewController: UIViewController {
     // MARK: - Private Properties
     private var categories: [TrackerCategory] = []
     private var completedTrackers: [TrackerRecord] = []
+    private var visibleCategories: [TrackerCategory] = []
+    private let trackerStore = TrackerStore()
+    private let trackerRecordStore = TrackerRecordStore()
     private var trackersId = Set<UUID>()
-    private var visibleCategories: [TrackerCategory] = [
-        TrackerCategory(
-            title: "Пойти в магазин",
-            trackers: [ Tracker(
-                id: UUID(),
-                name: "Хлеб",
-                color: .red,
-                emoji: "🍔",
-                mySchedule: [.monday, .friday]),
-                        
-                        Tracker(id: UUID(),
-                                name: "Торт",
-                                color: .blue,
-                                emoji: "❤️",
-                                mySchedule: [.tuesday])
-            ]),
-        TrackerCategory(
-            title: "Убираться",
-            trackers: [Tracker(
-                id: UUID(),
-                name: "Протереть пыль",
-                color: .orange,
-                emoji: "🙌",
-                mySchedule: [.tuesday, .saturday])
-            ])
-    ]
     
     private lazy var addTrackerButton: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem()
@@ -115,11 +92,12 @@ final class TrackerViewController: UIViewController {
         setupUI()
         setupConstraints()
         
-        categories = visibleCategories
+        trackerStore.delegate = self
+        updateCategories()
+        updateCompletedTrackers()
         pictureStackView.isHidden = !visibleCategories.isEmpty
         
-        TrackerManager.shared.clearCompletedTrackers()
-        
+        trackerCollectionView.reloadData()
         filterDataByDate()
         createDatePicker.addTarget(self, action: #selector(datePickerChanged), for: .valueChanged)
         
@@ -193,6 +171,19 @@ final class TrackerViewController: UIViewController {
         trackerCollectionView.reloadData()
     }
     
+    private func updateCategories() {
+        visibleCategories = categories
+        categories = trackerStore.trackers.map { TrackerCategory(title: "Категория", trackers: [$0])}
+    }
+    
+    private func updateCompletedTrackers() {
+        if let completedTrackers = trackerRecordStore.trackerRecords {
+            self.completedTrackers = completedTrackers
+        } else {
+            self.completedTrackers = []
+        }
+    }
+    
     @objc private func datePickerChanged(sender: UIDatePicker) {
         currentDate = createDatePicker.date
         filters()
@@ -203,6 +194,7 @@ final class TrackerViewController: UIViewController {
         let trackerCreator = TrackerCreatorViewController(delegate: self)
         trackerCreator.delegate = self
         trackerCreator.categories = categories
+        trackerCreator.trackerStore = trackerStore
         let navigationController = UINavigationController(rootViewController: trackerCreator)
         present(navigationController, animated: true)
     }
@@ -215,7 +207,7 @@ final class TrackerViewController: UIViewController {
 // MARK: TrackerCreatirDelegate
 extension TrackerViewController: TrackerCreatorDelegate {
     func newTrackerCreated(_ tracker: Tracker) {
-        let newCategory = TrackerCategory(title: "Новая категория", trackers: [tracker])
+        let newCategory = TrackerCategory(title: "Категория", trackers: [tracker])
         categories.append(newCategory)
         filters()
         trackerCollectionView.reloadData()
@@ -241,22 +233,26 @@ extension TrackerViewController: UICollectionViewDataSource {
         else {
             return UICollectionViewCell()
         }
+        
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.row]
-        let resCompare = Calendar.current.compare(Date(), to: currentDate, toGranularity: .day)
         
-        let completionCount = TrackerManager.shared.getCompletionCount(for: tracker.id)
-        
-        let isTrackerDone = TrackerManager.shared.isTrackerCompleted(trackerId: tracker.id, date: currentDate)
-        
-        let model = TrackerCellViewModel(name: tracker.name,
-                                         emoji: tracker.emoji,
-                                         color: tracker.color,
-                                         trackerIsDone: isTrackerDone,
-                                         doneButtonIsEnabled: resCompare == .orderedSame || resCompare == .orderedDescending,
-                                         counter: UInt(completionCount),
-                                         id: tracker.id)
-        cell.configure(model: model)
-        cell.delegate = self
+        if let dateWithoutTime = Date().deleteTime() {
+            let resCompare = Calendar.current.compare(dateWithoutTime, to: currentDate, toGranularity: .day)
+            let trackerRecordDate = completedTrackers.first { $0.id == tracker.id && Calendar.current.isDate($0.date, inSameDayAs: currentDate) }
+            let isTrackerDone = trackerRecordDate != nil
+            
+            let model = TrackerCellViewModel(name: tracker.name,
+                                             emoji: tracker.emoji,
+                                             color: tracker.color,
+                                             trackerIsDone: isTrackerDone,
+                                             doneButtonIsEnabled: resCompare == .orderedSame || resCompare == .orderedDescending,
+                                             counter:  UInt(completedTrackers.filter { $0.id == tracker.id }.count),
+                                             id: tracker.id)
+            cell.configure(model: model)
+            cell.cellTapAction = { [weak self] in
+                self?.trackerCellDelegate(id: tracker.id)
+            }
+        }
         return cell
     }
     
@@ -287,30 +283,17 @@ extension TrackerViewController: UICollectionViewDelegateFlowLayout {
 
 // MARK: TrackerCellDelegate
 extension TrackerViewController: TrackerCellDelegate {
-    
     func trackerCellDelegate(id: UUID) {
-        let currentDate = createDatePicker.date
-        let trackerIsDone = TrackerManager.shared.isTrackerCompleted(trackerId: id, date: currentDate)
-        
-        if trackerIsDone {
-            TrackerManager.shared.decreaseCompletionCount(trackerId: id, date: currentDate)
+        if let date = createDatePicker.date.deleteTime() {
+            let record = TrackerRecord(id: id, date: date)
+            if completedTrackers.contains(record) {
+                trackerRecordStore.deleteTrackerRecord(record)
+            } else {
+                trackerStore.updateTrackerCoreData(value: record)
+            }
         } else {
-            TrackerManager.shared.markTrackerAsCompleted(trackerId: id, date: currentDate)
+            return
         }
-        trackerCollectionView.reloadData()
-    }
-    
-    private func addExecutionTracker(id: UUID) {
-        let recordTracker = TrackerRecord(id: id, date: currentDate)
-        completedTrackers.append(recordTracker)
-        trackersId.insert(id)
-        trackerCollectionView.reloadData()
-    }
-    
-    private func removeExecutionTracker(id: UUID) {
-        completedTrackers.removeAll { $0.id == id && $0.date == currentDate}
-        trackersId.remove(id)
-        trackerCollectionView.reloadData()
     }
 }
 
@@ -327,3 +310,23 @@ extension TrackerViewController: UISearchControllerDelegate {
         filterDataByDate()
     }
 }
+
+// MARK: TrackerStoreDelegate
+extension TrackerViewController: TrackerStoreDelegate {
+    func trackerStoreDelegate() {
+        updateCategories()
+        updateCompletedTrackers()
+        filterDataByDate()
+        trackerCollectionView.reloadData()
+    }
+}
+
+// MARK: Date
+extension Date {
+    func deleteTime() -> Date? {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day], from: self)
+        return calendar.date(from: components)
+    }
+}
+
