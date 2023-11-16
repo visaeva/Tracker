@@ -8,15 +8,18 @@
 import UIKit
 
 protocol NewEventViewControllerDelegate: AnyObject {
-    func newEventTrackerCreated(_ tracker: Tracker)
+    func newEventTrackerCreated(_ tracker: Tracker, category: String?)
 }
 
 class NewEventViewController: UIViewController, UITableViewDelegate  {
     // MARK: - Public Properties
-    var categories: [TrackerCategory] = []
     weak var delegate: NewEventViewControllerDelegate?
+    var categories: [TrackerCategory] = []
+    var categoriesViewModel: CategoryViewControllerModel!
+    var selectedCategory: String?
     
     // MARK: - Private Properties
+    private let trackerCategoryStore = TrackerCategoryStore()
     private var mySchedule: Set<WeekDay> = []
     private var trackersScheduleViewController: TrackersSheduleViewController?
     private let tracker = false
@@ -43,6 +46,7 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
         UIColor(named: "17") ?? #colorLiteral(red: 0.6243798137, green: 0.5432854891, blue: 0.9222726226, alpha: 1),
         UIColor(named: "18") ?? #colorLiteral(red: 0.1919171214, green: 0.8337991834, blue: 0.4192006886, alpha: 1)
     ]
+    
     private let newHabitLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -149,14 +153,32 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.isScrollEnabled = true
         scrollView.backgroundColor = .white
-        
         return scrollView
+    }()
+    
+    private var chosenCategory: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        label.textColor = .gray
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private var categoryLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Категория"
+        label.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
     
     // MARK: - View Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
+        
+        let trackerCategoryStore = TrackerCategoryStore()
+        categoriesViewModel = CategoryViewControllerModel(trackerCategoryStore: trackerCategoryStore)
         
         setupHabitUI()
         setupHabitConstraints()
@@ -284,6 +306,28 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
         }
     }
     
+    private func updateCategoryCellSubtitle() {
+        if let selectedCategory = selectedCategory {
+            chosenCategory.isHidden = false
+            categoryLabel.isHidden = false
+            chosenCategory.text = selectedCategory
+        } else {
+            chosenCategory.isHidden = true
+            categoryLabel.isHidden = true
+            chosenCategory.text = nil
+            categoryLabel.text = nil
+        }
+    }
+    
+    private func updateCreateButtonState() {
+        let isNameEmpty = nameTextField.text?.isEmpty ?? true
+        let isCategorySelected = selectedCategory != nil
+        let isEmojiSelected = selectedEmojiIndex != nil
+        let isColorSelected = selectedColorIndex != nil
+        createButton.isEnabled = !isNameEmpty && isCategorySelected && isEmojiSelected && isColorSelected
+        createButton.backgroundColor = createButton.isEnabled ? .black : UIColor(named: "BackgroundGray")
+    }
+    
     @objc private func cancelButtonTapped() {
         dismiss(animated: true, completion: nil)
     }
@@ -302,21 +346,21 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
                                  color: colorForTracker,
                                  emoji: emojiForTracker,
                                  mySchedule: mySchedule, records: [])
-        
-        delegate?.newEventTrackerCreated(newTracker)
+        do {
+            try trackerCategoryStore.createTrackerWithCategory(tracker: newTracker, with: selectedCategory ?? "")
+        } catch {
+            print("Error creating tracker with category: \(error)")
+        }
+        delegate?.newEventTrackerCreated(newTracker, category: selectedCategory)
     }
     
     @objc private func textFieldDidChange() {
-        if let text = nameTextField.text, !text.isEmpty {
-            createButton.backgroundColor = .black
-        } else {
-            createButton.backgroundColor = UIColor(named: "BackgroundGray")
-        }
-        if nameTextField.text?.count ?? 0 >= 38 {
+        if let text = nameTextField.text, text.count >= 38 {
             textFieldSymbolConstraintLabel.isHidden = false
         } else {
             textFieldSymbolConstraintLabel.isHidden = true
         }
+        updateCreateButtonState()
     }
 }
 
@@ -329,12 +373,50 @@ extension NewEventViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if let cell = tableView.dequeueReusableCell(withIdentifier: "cell") {
             cell.layer.masksToBounds = true
-            cell.layer.cornerRadius = 16
+            
             switch indexPath.row {
             case 0:
-                cell.textLabel?.text = "Категория"
+                cell.layer.cornerRadius = 16
+                cell.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
                 cell.backgroundColor = UIColor(named: "Background")
+                
+                cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 400)
                 cell.accessoryType = .disclosureIndicator
+                cell.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+                
+                
+                cell.accessoryType = .disclosureIndicator
+                
+                cell.contentView.addSubview(categoryLabel)
+                cell.contentView.addSubview(chosenCategory)
+                
+                let categoryLabelTopConstraint = categoryLabel.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 15)
+                let categoryLabelLeadingConstraint = categoryLabel.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 16)
+                let categoryLabelHeightConstraint = categoryLabel.heightAnchor.constraint(equalToConstant: 22)
+                
+                let chosenCategoryTopConstraint = chosenCategory.topAnchor.constraint(equalTo: categoryLabel.bottomAnchor, constant: 0)
+                let chosenCategoryLeadingConstraint = chosenCategory.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 16)
+                let chosenCategoryBottomConstraint = chosenCategory.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor, constant: -14)
+                let chosenCategoryHeightConstraint = chosenCategory.heightAnchor.constraint(equalToConstant: 22)
+                
+                if selectedCategory == nil {
+                    chosenCategory.isHidden = true
+                    categoryLabelTopConstraint.constant = 10
+                    categoryLabelLeadingConstraint.isActive = true
+                    categoryLabel.textAlignment = .left
+                } else {
+                    chosenCategory.isHidden = false
+                    categoryLabelTopConstraint.constant = 0
+                    categoryLabelLeadingConstraint.isActive = false
+                    categoryLabel.textAlignment = .left
+                }
+                
+                NSLayoutConstraint.activate([
+                    categoryLabelTopConstraint,
+                    categoryLabelLeadingConstraint,
+                    chosenCategoryTopConstraint,
+                    chosenCategoryLeadingConstraint,
+                    chosenCategoryBottomConstraint])
                 
             default:
                 break
@@ -357,12 +439,23 @@ extension NewEventViewController: UITableViewDataSource {
         
         switch indexPath.row {
         case 0:
-            let categoryVC = CategoryViewController()
+            let categoryVC = CategoryViewController(viewModel: self.categoriesViewModel)
+            categoryVC.viewModel = self.categoriesViewModel
+            categoryVC.delegate = self
             let navController = UINavigationController(rootViewController: categoryVC)
             present(navController, animated: true, completion: nil)
         default:
             break
         }
+    }
+}
+// MARK: - CategoryViewControllerDelegate
+extension NewEventViewController: CategoryViewControllerDelegate {
+    func didSelectCategory(_ category: TrackerCategory) {
+        selectedCategory = category.title
+        updateCategoryCellSubtitle()
+        tableView.reloadRows(at: [IndexPath(row: 0, section: 0)], with: .none)
+        dismiss(animated: true)
     }
 }
 
@@ -456,6 +549,7 @@ extension NewEventViewController: UICollectionViewDataSource {
             selectedEmojiIndex = indexPath.row
             collectionView.reloadItems(at: [indexPath])
         }
+        updateCreateButtonState()
     }
 }
 

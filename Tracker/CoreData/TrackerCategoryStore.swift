@@ -26,9 +26,14 @@ private struct TrackerCategoryUpdate {
     let movedIndexes: Set<Move>
 }
 
+protocol TrackerCategoryStoreDelegate {
+    func update()
+}
+
 class TrackerCategoryStore: NSObject {
     
     // MARK: Public properties
+    static let shared = TrackerCategoryStore()
     var categories: [TrackerCategory] {
         guard
             let objects = self.fetchedResultController.fetchedObjects,
@@ -75,23 +80,31 @@ class TrackerCategoryStore: NSObject {
     
     // MARK: Public Methods
     func createTrackerWithCategory(tracker: Tracker, with titleCategory: String) throws {
-        let trackerCoreData = try trackerStore.createTracker(from: tracker)
-        
         if let currentCategory = try? fetchedCategory(with: titleCategory) {
-            guard let trackers = currentCategory.trackers, var newCoreDataTrackers = trackers.allObjects as? [TrackerCoreData] else { return }
-            newCoreDataTrackers.append(trackerCoreData)
-            currentCategory.trackers = NSSet(array: newCoreDataTrackers)
+            let trackerCoreData = try trackerStore.createTracker(from: tracker)
+            currentCategory.addToTrackers(trackerCoreData)
         } else {
             let newCategory = TrackerCategoryCoreData(context: context)
             newCategory.titleCategory = titleCategory
-            newCategory.trackers = NSSet(array: [trackerCoreData])
+            let trackerCoreData = try trackerStore.createTracker(from: tracker)
+            newCategory.addToTrackers(trackerCoreData)
         }
         do {
             try context.save()
-            print("Tracker saved with category")
         } catch {
             throw TrackerCategoryStoreError.errorCategoryModel
         }
+    }
+    
+    func createCategory(_ category: TrackerCategory) throws {
+        guard let entity = NSEntityDescription.entity(forEntityName: "TrackerCategoryCoreData", in: context) else { return }
+        let categoryEntity = TrackerCategoryCoreData(entity: entity, insertInto: context)
+        
+        categoryEntity.titleCategory = category.title
+        categoryEntity.trackers = NSSet(array: [])
+        
+        try context.save()
+        try fetchedResultController.performFetch()
     }
     
     // MARK: Private Methods
