@@ -97,7 +97,6 @@ final class TrackerViewController: UIViewController {
         setupConstraints()
         
         trackerStore.delegate = self
-        updateCategories()
         updateCompletedTrackers()
         trackerCollectionView.reloadData()
         filterDataByDate()
@@ -171,16 +170,6 @@ final class TrackerViewController: UIViewController {
             trackerStore.updateNameFilter(nameFilter: nil)
             filterDataByDate()
         }
-        trackerCollectionView.reloadData()
-    }
-    
-    private func updateCategories() {
-        let categoryTitles = categories.map { $0.title }
-        let todayCategories = trackerStore.trackers.compactMap { tracker in
-            let categoryTitle = categoryTitles.first ?? "Категория"
-            return TrackerCategory(title: categoryTitle, trackers: [tracker])
-        }
-        visibleCategories = todayCategories
         trackerCollectionView.reloadData()
     }
     
@@ -324,7 +313,6 @@ extension TrackerViewController: UISearchControllerDelegate {
 // MARK: TrackerStoreDelegate
 extension TrackerViewController: TrackerStoreDelegate {
     func trackerStoreDelegate() {
-        updateCategories()
         updateCompletedTrackers()
         filterDataByDate()
         trackerCollectionView.reloadData()
