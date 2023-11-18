@@ -38,7 +38,7 @@ final class TrackersSheduleViewController: UIViewController {
         return tableView
     }()
     
-    private let doneButton: UIButton = {
+    private lazy var doneButton: UIButton = {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Готово", for: .normal)

@@ -15,7 +15,7 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
     // MARK: - Public Properties
     weak var delegate: NewEventViewControllerDelegate?
     var categories: [TrackerCategory] = []
-    var categoriesViewModel: CategoryViewControllerModel!
+    var categoriesViewModel: CategoryViewModel!
     var selectedCategory: String?
     
     // MARK: - Private Properties
@@ -60,7 +60,7 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
         textField.translatesAutoresizingMaskIntoConstraints = false
         textField.placeholder = "Введите название трекера"
         textField.clearButtonMode = .always
-        textField.backgroundColor = UIColor(named: "Background")
+        textField.backgroundColor = .darkBackground
         textField.layer.cornerRadius = 16
         textField.leftViewMode = .always
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: 0))
@@ -79,7 +79,7 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
         return tableView
     }()
     
-    private let cancelButton: UIButton = {
+    private lazy var cancelButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Отменить", for: .normal)
@@ -92,12 +92,12 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
         return button
     }()
     
-    private let createButton: UIButton = {
+    private lazy var createButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Создать", for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor(named: "BackgroundGray")
+        button.backgroundColor = .lightBackground
         button.layer.cornerRadius = 16
         button.addTarget(self, action: #selector(createButtonTapped), for: .touchUpInside)
         return button
@@ -178,7 +178,7 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
         view.backgroundColor = .white
         
         let trackerCategoryStore = TrackerCategoryStore()
-        categoriesViewModel = CategoryViewControllerModel(trackerCategoryStore: trackerCategoryStore)
+        categoriesViewModel = CategoryViewModel(trackerCategoryStore: trackerCategoryStore)
         
         setupHabitUI()
         setupHabitConstraints()
@@ -325,7 +325,7 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
         let isEmojiSelected = selectedEmojiIndex != nil
         let isColorSelected = selectedColorIndex != nil
         createButton.isEnabled = !isNameEmpty && isCategorySelected && isEmojiSelected && isColorSelected
-        createButton.backgroundColor = createButton.isEnabled ? .black : UIColor(named: "BackgroundGray")
+        createButton.backgroundColor = createButton.isEnabled ? .black : .lightBackground
     }
     
     @objc private func cancelButtonTapped() {
@@ -378,7 +378,7 @@ extension NewEventViewController: UITableViewDataSource {
             case 0:
                 cell.layer.cornerRadius = 16
                 cell.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-                cell.backgroundColor = UIColor(named: "Background")
+                cell.backgroundColor = .darkBackground
                 
                 cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 400)
                 cell.accessoryType = .disclosureIndicator
@@ -454,6 +454,7 @@ extension NewEventViewController: CategoryViewControllerDelegate {
     func didSelectCategory(_ category: TrackerCategory) {
         selectedCategory = category.title
         updateCategoryCellSubtitle()
+        tableView.reloadData()
         tableView.reloadRows(at: [IndexPath(row: 0, section: 0)], with: .none)
         dismiss(animated: true)
     }

@@ -1,18 +1,18 @@
 //
-//  CategoryViewControllerModel.swift
+//  CategoryViewModel.swift
 //  Tracker
 //
 //  Created by Victoria Isaeva on 25.10.2023.
 //
 
-import UIKit
+import Foundation
 
 struct Category {
     let id: UUID
     let name: String
 }
 
-final class CategoryViewControllerModel {
+final class CategoryViewModel {
     // MARK: - Private Properties
     var trackerCategoryStore: TrackerCategoryStore
     var selectedCategoryIndex: Int?

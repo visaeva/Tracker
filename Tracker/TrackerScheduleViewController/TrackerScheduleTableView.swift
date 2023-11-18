@@ -19,9 +19,9 @@ final class TrackerScheduleTableView: UITableViewCell {
     // MARK: - Private Properties
     private var row: Int!
     
-    private let switchTap: UISwitch = {
+    private lazy var switchTap: UISwitch = {
         let switchTap = UISwitch()
-        switchTap.onTintColor = UIColor(named: "Blue")
+        switchTap.onTintColor = .blue
         switchTap.addTarget(self, action: #selector(switchTapped), for: .touchUpInside)
         return switchTap
     }()
@@ -33,7 +33,7 @@ final class TrackerScheduleTableView: UITableViewCell {
         self.accessoryView = switchTap
         textLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
         textLabel?.textColor = .black
-        backgroundColor = UIColor(named: "Background")
+        backgroundColor = .darkBackground
         if row == 6 {
             separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 400)
             layer.cornerRadius = 16

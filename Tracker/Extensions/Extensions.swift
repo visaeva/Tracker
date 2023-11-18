@@ -15,3 +15,11 @@ extension Date {
         return calendar.date(from: components)
     }
 }
+
+// MARK: UIColor
+extension UIColor {
+    static var darkBackground: UIColor { UIColor(named: "Background") ?? .clear }
+    static var lightBackground: UIColor { UIColor(named: "BackgroundGray") ?? .clear }
+    static var blue: UIColor { UIColor(named: "Blue") ?? .clear }
+}
+

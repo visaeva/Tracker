@@ -7,17 +7,19 @@
 
 import UIKit
 
-protocol CategoryViewControllerDelegate {
+protocol CategoryViewControllerDelegate: AnyObject {
     func didSelectCategory(_ category: TrackerCategory)
 }
 
 class CategoryViewController: UIViewController {
     // MARK: - Public Properties
-    var viewModel: CategoryViewControllerModel
-    var delegate: CategoryViewControllerDelegate?
+    var viewModel: CategoryViewModel
+    weak var delegate: CategoryViewControllerDelegate?
+    // MARK: Private Properties
+    private let categoryCellReuseIdentifier = "categoryCell"
     
     // MARK: - Initializers
-    init(viewModel: CategoryViewControllerModel) {
+    init(viewModel: CategoryViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -62,7 +64,7 @@ class CategoryViewController: UIViewController {
         return label
     }()
     
-    private let addButton: UIButton = {
+    private lazy var addButton: UIButton = {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         button.backgroundColor = .black
@@ -95,7 +97,7 @@ class CategoryViewController: UIViewController {
         setupUI()
         setupConstraints()
         
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "categoryCell")
+        tableView.register(TrackerCategoryCell.self, forCellReuseIdentifier: categoryCellReuseIdentifier)
         tableView.delegate = self
         tableView.dataSource = self
         
@@ -169,29 +171,14 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "categoryCell", for: indexPath)
-        let categoryName = viewModel.categories[indexPath.row].title
-        cell.textLabel?.text = categoryName
-        cell.textLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
-        cell.backgroundColor = UIColor(named: "Background")
+        let cell = tableView.dequeueReusableCell(withIdentifier:  categoryCellReuseIdentifier, for: indexPath) as! TrackerCategoryCell
         
-        let selectedBackgroundView = UIView()
-        selectedBackgroundView.backgroundColor = UIColor(named: "Background")
-        selectedBackgroundView.layer.cornerRadius = 16
-        
+        let category = viewModel.categories[indexPath.row]
         let isFirstCell = indexPath.row == 0
         let isLastCell = indexPath.row == tableView.numberOfRows(inSection: indexPath.section) - 1
+        let isSelected = indexPath.row == viewModel.selectedCategoryIndex
         
-        if isFirstCell && isLastCell {
-            selectedBackgroundView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-        } else if isFirstCell {
-            selectedBackgroundView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        } else if isLastCell {
-            selectedBackgroundView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-        } else {
-            selectedBackgroundView.layer.maskedCorners = []
-        }
-        cell.selectedBackgroundView = selectedBackgroundView
+        cell.configure(with: category, isFirst: isFirstCell, isLast: isLastCell, isSelected: isSelected)
         return cell
     }
     
@@ -215,13 +202,12 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard indexPath.row < viewModel.categories.count else {
+            return
+        }
         viewModel.selectedCategoryIndex = indexPath.row
         tableView.reloadData()
-        
         let selectedCategory = viewModel.categories[indexPath.row]
         delegate?.didSelectCategory(selectedCategory)
     }
 }
-
-
-

@@ -9,7 +9,7 @@ import UIKit
 
 final class CreateCategoryViewController: UIViewController{
     // MARK: - Public Properties
-    var viewModel: CategoryViewControllerModel?
+    var viewModel: CategoryViewModel?
     
     // MARK: - Private Properties
     private let topLabel: UILabel = {
@@ -25,7 +25,7 @@ final class CreateCategoryViewController: UIViewController{
         textField.translatesAutoresizingMaskIntoConstraints = false
         textField.placeholder = "Введите название категории"
         textField.clearButtonMode = .always
-        textField.backgroundColor = UIColor(named: "Background")
+        textField.backgroundColor = .darkBackground
         textField.layer.cornerRadius = 16
         textField.leftViewMode = .always
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: 0))
@@ -34,13 +34,13 @@ final class CreateCategoryViewController: UIViewController{
         return textField
     }()
     
-    private let addButton: UIButton = {
+    private lazy var addButton: UIButton = {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         button.backgroundColor = .white
         button.setTitle("Готово", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = UIColor(named: "BackgroundGray")
+        button.backgroundColor = .lightBackground
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 16
         button.contentHorizontalAlignment = .center
@@ -101,7 +101,7 @@ final class CreateCategoryViewController: UIViewController{
             addButton.setTitleColor(.white, for: .normal)
             addButton.isEnabled = true
         } else {
-            addButton.backgroundColor = UIColor(named: "BackgroundGray")
+            addButton.backgroundColor = .lightBackground
             addButton.setTitleColor(.white, for: .normal)
             addButton.isEnabled = false
         }

@@ -28,7 +28,7 @@ final class TrackerCreatorViewController: UIViewController {
         return label
     }()
     
-    private let habitButton: UIButton = {
+    private lazy var habitButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Привычка", for: .normal)
         button.addTarget(self, action: #selector(habitButtonTapped), for: .touchUpInside)
@@ -40,7 +40,7 @@ final class TrackerCreatorViewController: UIViewController {
         return button
     }()
     
-    private let eventButton: UIButton = {
+    private lazy var eventButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Нерегулярное событие", for: .normal)
         button.addTarget(self, action: #selector(eventButtonTapped), for: .touchUpInside)
