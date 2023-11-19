@@ -38,7 +38,7 @@ final class TrackersSheduleViewController: UIViewController {
         return tableView
     }()
     
-    private let doneButton: UIButton = {
+    private lazy var doneButton: UIButton = {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Готово", for: .normal)
@@ -113,7 +113,7 @@ extension TrackersSheduleViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as? TrackerScheduleTableView {
-            cell.textLabel?.text = WeekDay.weekDay(for: indexPath.row)
+            cell.textLabel?.text = WeekDay(rawValue: indexPath.row)?.fullDayName ?? ""
             cell.delegate = self
             if let day = WeekDay(rawValue: indexPath.row ) {
                 cell.configure(at: indexPath.row, isOn: mySchedule.contains(day))

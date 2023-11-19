@@ -8,16 +8,17 @@
 import UIKit
 
 protocol NewHabitViewControllerDelegate: AnyObject {
-    func newTrackerCreated(_ tracker: Tracker)
+    func newTrackerCreated(_ tracker: Tracker, category: String?)
 }
 
 final class NewHabitViewController: UIViewController, UITableViewDelegate {
-    
     // MARK: - Public Properties
-    var categories: [TrackerCategory] = []
     weak var delegate: NewHabitViewControllerDelegate?
-    
+    var categories: [TrackerCategory] = []
+    var categoriesViewModel: CategoryViewModel!
+    var selectedCategory: String?
     // MARK: - Private Properties
+    private let trackerCategoryStore = TrackerCategoryStore()
     private var mySchedule: Set<WeekDay> = []
     private var trackersScheduleViewController: TrackersSheduleViewController?
     private let tracker = false
@@ -44,6 +45,7 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         UIColor(named: "17") ?? #colorLiteral(red: 0.6243798137, green: 0.5432854891, blue: 0.9222726226, alpha: 1),
         UIColor(named: "18") ?? #colorLiteral(red: 0.1919171214, green: 0.8337991834, blue: 0.4192006886, alpha: 1)
     ]
+    
     private let newHabitLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -57,7 +59,7 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         textField.translatesAutoresizingMaskIntoConstraints = false
         textField.placeholder = "Введите название трекера"
         textField.clearButtonMode = .always
-        textField.backgroundColor = UIColor(named: "Background")
+        textField.backgroundColor = .darkBackground
         textField.layer.cornerRadius = 16
         textField.leftViewMode = .always
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: 0))
@@ -76,7 +78,7 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         return tableView
     }()
     
-    private let cancelButton: UIButton = {
+    private lazy var cancelButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Отменить", for: .normal)
@@ -89,12 +91,12 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         return button
     }()
     
-    private let createButton: UIButton = {
+    private lazy var createButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Создать", for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor(named: "BackgroundGray")
+        button.backgroundColor = .lightBackground
         button.layer.cornerRadius = 16
         button.addTarget(self, action: #selector(createButtonTapped), for: .touchUpInside)
         return button
@@ -117,6 +119,22 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         return label
     }()
     
+    private var chosenCategory: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        label.textColor = .gray
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private var categoryLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Категория"
+        label.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     private let scheduleLabel: UILabel = {
         let label = UILabel()
         label.text = "Расписание"
@@ -125,13 +143,13 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         return label
     }()
     
-    private var emojiCollectionView: UICollectionView = {
+    private lazy var emojiCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         return collectionView
     }()
     
-    private var colorsCollectionView: UICollectionView = {
+    private lazy var colorsCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         let colorsCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         return colorsCollectionView
@@ -169,6 +187,8 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         
         setupHabitUI()
         setupHabitConstraints()
+        let trackerCategoryStore = TrackerCategoryStore()
+        categoriesViewModel = CategoryViewModel(trackerCategoryStore: trackerCategoryStore)
         
         nameTextField.delegate = self
         nameTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
@@ -285,11 +305,35 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
             } else {
                 let selectedDays = mySchedule
                     .sorted(by: { $0.rawValue < $1.rawValue })
-                    .map { WeekDay.shortNameDay(for: $0.rawValue) }
+                    .map { $0.shortDayName }
                 daysLabel.isHidden = false
                 daysLabel.text = selectedDays.joined(separator: ", ")
             }
         }
+    }
+    
+    private func updateCategoryCellSubtitle() {
+        if let selectedCategory = selectedCategory {
+            chosenCategory.isHidden = false
+            categoryLabel.isHidden = false
+            chosenCategory.text = selectedCategory
+        } else {
+            chosenCategory.isHidden = true
+            categoryLabel.isHidden = true
+            chosenCategory.text = nil
+            categoryLabel.text = nil
+        }
+    }
+    
+    private func updateCreateButtonState() {
+        let isNameEmpty = nameTextField.text?.isEmpty ?? true
+        let isCategoryEmpty = selectedCategory == nil
+        let isScheduleEmpty = mySchedule.isEmpty
+        let isEmojiSelected = selectedEmojiIndex != nil
+        let isColorSelected = selectedColorIndex != nil
+        
+        createButton.isEnabled = !isNameEmpty && !isCategoryEmpty && !isScheduleEmpty && isEmojiSelected && isColorSelected
+        createButton.backgroundColor = createButton.isEnabled ? .black : .lightBackground
     }
     
     @objc private func cancelButtonTapped() {
@@ -312,16 +356,14 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
                                  name: name,
                                  color: colorForTracker,
                                  emoji: emojiForTracker,
-                                 mySchedule: mySchedule, records: [])
-        
-        delegate?.newTrackerCreated(newTracker)
-    }
-    
-    private func updateCreateButtonState() {
-        let isNameEmpty = nameTextField.text?.isEmpty ?? true
-        let isScheduleEmpty = mySchedule.isEmpty
-        createButton.isEnabled = !isNameEmpty && !isScheduleEmpty
-        createButton.backgroundColor = createButton.isEnabled ? .black : UIColor(named: "BackgroundGray")
+                                 mySchedule: mySchedule,
+                                 records: [])
+        do {
+            try trackerCategoryStore.createTrackerWithCategory(tracker: newTracker, with: selectedCategory ?? "")
+        } catch {
+            print("Error creating tracker with category: \(error)")
+        }
+        delegate?.newTrackerCreated(newTracker, category: selectedCategory)
     }
     
     @objc private func textFieldDidChange() {
@@ -346,20 +388,54 @@ extension NewHabitViewController: UITableViewDataSource {
             
             switch indexPath.row {
             case 0:
-                cell.textLabel?.text = "Категория"
-                cell.backgroundColor = UIColor(named: "Background")
+                cell.backgroundColor = .darkBackground
                 cell.layer.cornerRadius = 16
+                cell.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+                cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 400)
+                cell.accessoryType = .disclosureIndicator
                 cell.layer.maskedCorners = tracker ?
                 [.layerMinXMinYCorner, .layerMaxXMinYCorner] :
                 [.layerMinXMinYCorner, .layerMaxXMinYCorner]
                 
                 if !tracker {
-                    cell.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+                    cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
                 }
                 cell.accessoryType = .disclosureIndicator
                 
+                cell.contentView.addSubview(categoryLabel)
+                cell.contentView.addSubview(chosenCategory)
+                
+                let categoryLabelTopConstraint = categoryLabel.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 15)
+                let categoryLabelLeadingConstraint = categoryLabel.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 16)
+                let categoryLabelHeightConstraint = categoryLabel.heightAnchor.constraint(equalToConstant: 22)
+                
+                let chosenCategoryTopConstraint = chosenCategory.topAnchor.constraint(equalTo: categoryLabel.bottomAnchor, constant: 0)
+                let chosenCategoryLeadingConstraint = chosenCategory.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 16)
+                let chosenCategoryBottomConstraint = chosenCategory.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor, constant: -14)
+                let chosenCategoryHeightConstraint = chosenCategory.heightAnchor.constraint(equalToConstant: 22)
+                
+                if selectedCategory == nil {
+                    chosenCategory.isHidden = true
+                    categoryLabelTopConstraint.constant = 10
+                    categoryLabelLeadingConstraint.isActive = true
+                    categoryLabel.textAlignment = .left
+                } else {
+                    chosenCategory.isHidden = false
+                    categoryLabelTopConstraint.constant = 0
+                    categoryLabelLeadingConstraint.isActive = false
+                    categoryLabel.textAlignment = .left
+                }
+                
+                NSLayoutConstraint.activate([
+                    categoryLabelTopConstraint,
+                    categoryLabelLeadingConstraint,
+                    chosenCategoryTopConstraint,
+                    chosenCategoryLeadingConstraint,
+                    chosenCategoryBottomConstraint
+                ])
+                
             case 1:
-                cell.backgroundColor = UIColor(named: "Background")
+                cell.backgroundColor = .darkBackground
                 cell.layer.cornerRadius = 16
                 cell.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
                 cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 400)
@@ -371,11 +447,11 @@ extension NewHabitViewController: UITableViewDataSource {
                 let currentDay = calendar.component(.weekday, from: Date())
                 cell.contentView.addSubview(daysLabel)
                 
-                let scheduleLabelTopConstraint = scheduleLabel.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 10)
-                let scheduleLabelLeadingConstraint = scheduleLabel.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 20)
-                let daysLabelTopConstraint = daysLabel.topAnchor.constraint(equalTo: scheduleLabel.bottomAnchor, constant: 10)
-                let daysLabelLeadingConstraint = daysLabel.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 20)
-                let daysLabelBottomConstraint = daysLabel.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor, constant: -10)
+                let scheduleLabelTopConstraint = scheduleLabel.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 15)
+                let scheduleLabelLeadingConstraint = scheduleLabel.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 16)
+                let daysLabelTopConstraint = daysLabel.topAnchor.constraint(equalTo: scheduleLabel.bottomAnchor, constant: 0)
+                let daysLabelLeadingConstraint = daysLabel.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 16)
+                let daysLabelBottomConstraint = daysLabel.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor, constant: -14)
                 
                 if mySchedule.isEmpty {
                     daysLabel.isHidden = true
@@ -417,7 +493,9 @@ extension NewHabitViewController: UITableViewDataSource {
         
         switch indexPath.row {
         case 0:
-            let categoryVC = CategoryViewController()
+            let categoryVC = CategoryViewController(viewModel: self.categoriesViewModel)
+            categoryVC.viewModel = self.categoriesViewModel
+            categoryVC.delegate = self
             let navController = UINavigationController(rootViewController: categoryVC)
             present(navController, animated: true, completion: nil)
             
@@ -443,6 +521,17 @@ extension NewHabitViewController: TrackerScheduleViewControllerDelegate {
         self.mySchedule = schedule
         updateScheduleCellSubtitle()
         updateCreateButtonState()
+        dismiss(animated: true)
+    }
+}
+
+// MARK: - CategoryViewControllerDelegate
+extension NewHabitViewController: CategoryViewControllerDelegate {
+    func didSelectCategory(_ category: TrackerCategory) {
+        selectedCategory = category.title
+        updateCategoryCellSubtitle()
+        tableView.reloadData()
+        tableView.reloadRows(at: [IndexPath(row: 0, section: 0)], with: .none)
         dismiss(animated: true)
     }
 }
@@ -526,6 +615,7 @@ extension NewHabitViewController: UICollectionViewDataSource {
             selectedEmojiIndex = indexPath.row
             collectionView.reloadItems(at: [indexPath])
         }
+        updateCreateButtonState()
     }
 }
 

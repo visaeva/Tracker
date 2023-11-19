@@ -13,16 +13,23 @@ enum TrackerStoreError: Error {
     case error
 }
 
-protocol TrackerStoreDelegate {
+protocol TrackerStoreDelegate: AnyObject {
     func trackerStoreDelegate()
 }
 
+protocol TrackerViewControllerDataSource {
+    func cellData(at indexPath: IndexPath) -> Tracker?
+    func numberOfRows(at section: Int) -> Int
+    func titleForTrackerSection(section: Int) -> String
+}
+
 final class TrackerStore: NSObject {
+    
     // MARK: Public properties
-    var delegate: TrackerStoreDelegate?
+    weak var delegate: TrackerStoreDelegate?
+    var dataSource: TrackerViewControllerDataSource?
     var insertedIndexes: IndexSet?
     var deletedIndexes: IndexSet?
-    
     var trackers: [Tracker] {
         guard let objects = fetchedResultController.fetchedObjects,
               let trackers = try? objects.map({
@@ -33,17 +40,19 @@ final class TrackerStore: NSObject {
     }
     
     // MARK: - Private Properties
+    private var currentNameFilter: String?
+    private var filterWeekDay: Int = 0
+    private var selectedCategory: String?
     private let context: NSManagedObjectContext
     private let uiColorMarshalling = UIColorMarshalling()
-    private let daysTransformer = DaysTransformer()
     
     private lazy var fetchedResultController: NSFetchedResultsController<TrackerCoreData> = {
         let request = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")
-        let sortDescriptor = NSSortDescriptor(keyPath: \TrackerCoreData.name, ascending: true)
+        let sortDescriptor = NSSortDescriptor(keyPath: \TrackerCoreData.category?.titleCategory, ascending: true)
         request.sortDescriptors = [sortDescriptor]
         let frc = NSFetchedResultsController(fetchRequest: request,
                                              managedObjectContext: context,
-                                             sectionNameKeyPath: nil,
+                                             sectionNameKeyPath: #keyPath(TrackerCoreData.category.titleCategory),
                                              cacheName: nil)
         try? frc.performFetch()
         frc.delegate = self
@@ -66,13 +75,53 @@ final class TrackerStore: NSObject {
     }
     
     // MARK: Public Methods
+    func updateCategoryPredicate(category: String?) {
+        selectedCategory = category
+        applyPredicate()
+    }
+    
+    func updateNameFilter(nameFilter: String?) {
+        currentNameFilter = nameFilter
+        applyPredicate()
+    }
+    
+    func updateDayOfWeekPredicate(for date: Date) {
+        filterWeekDay = (Calendar.current.component(.weekday, from: date) + 5) % 7
+        let dayPredicate = NSPredicate(format: "mySchedule CONTAINS[c] %@", "\(filterWeekDay)")
+        fetchedResultController.fetchRequest.predicate = dayPredicate
+        
+        do {
+            try fetchedResultController.performFetch()
+        } catch {
+            print("Error performing fetch: \(error)")
+        }
+    }
+    
+    func applyPredicate() {
+        var predicates: [NSPredicate] = []
+        predicates.append(NSPredicate(format: "mySchedule CONTAINS[c] %@", "\(filterWeekDay)"))
+        if let category = selectedCategory {
+            predicates.append(NSPredicate(format: "category.name == %@", category))
+        }
+        if let nameFilter = currentNameFilter, !nameFilter.isEmpty {
+            predicates.append(NSPredicate(format: "name CONTAINS[c] %@", nameFilter))
+        }
+        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+        fetchedResultController.fetchRequest.predicate = compoundPredicate
+        do {
+            try fetchedResultController.performFetch()
+        } catch {
+            print("Error performing fetch: \(error)")
+        }
+    }
+    
     func createTracker(from tracker: Tracker) throws -> TrackerCoreData {
         let trackerCoreData = TrackerCoreData(context: context)
         trackerCoreData.trackerID = tracker.id
         trackerCoreData.name = tracker.name
         trackerCoreData.color = uiColorMarshalling.hexString(from: tracker.color)
         trackerCoreData.emoji = tracker.emoji
-        trackerCoreData.mySchedule = daysTransformer.convertSetToMyScheduleString(tracker.mySchedule)
+        trackerCoreData.mySchedule = tracker.mySchedule.map { $0.rawValue }.map(String.init).joined(separator: ",")
         trackerCoreData.records = []
         saveContext()
         return trackerCoreData
@@ -106,13 +155,13 @@ final class TrackerStore: NSObject {
             print("Failed to retrieve necessary data from CoreData")
             throw TrackerStoreError.error }
         
-        let mySchedule = daysTransformer.convertMyScheduleStringToSet(myScheduleString)
+        let mySchedule = myScheduleString.split(separator: ",").compactMap { Int($0) }.compactMap { WeekDay(rawValue: $0) }
         
         return Tracker(id: id,
                        name: name,
                        color: uiColorMarshalling.color(from: color),
                        emoji: emoji,
-                       mySchedule: mySchedule,
+                       mySchedule: Set(mySchedule),
                        records: [])
     }
     
@@ -152,6 +201,7 @@ final class TrackerStore: NSObject {
     }
 }
 
+// MARK: NSFetchedResultsControllerDelegate
 extension TrackerStore: NSFetchedResultsControllerDelegate {
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         insertedIndexes = IndexSet()
@@ -159,7 +209,9 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
     }
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        delegate?.trackerStoreDelegate()
+        if let delegate = delegate {
+            delegate.trackerStoreDelegate()
+        }
         insertedIndexes = nil
         deletedIndexes = nil
     }
@@ -180,3 +232,23 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
     }
     }
 }
+
+// MARK: TrackerViewControllerDataSource
+extension TrackerStore: TrackerViewControllerDataSource {
+    func numberOfSections() -> Int {
+        return fetchedResultController.sections?.count ?? 0
+    }
+    
+    func cellData(at indexPath: IndexPath) -> Tracker? {
+        return try? makeTracker(from: fetchedResultController.object(at: indexPath))
+    }
+    
+    func numberOfRows(at section: Int) -> Int {
+        return fetchedResultController.sections?[section].numberOfObjects ?? 0
+    }
+    
+    func titleForTrackerSection(section: Int) -> String {
+        return fetchedResultController.sections?[section].name ?? ""
+    }
+}
+

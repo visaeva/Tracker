@@ -7,6 +7,10 @@
 
 import UIKit
 
+protocol TrackerViewControllerDelegate: AnyObject {
+    func createTracker(_ tracker: Tracker?, titleCategory: String?)
+}
+
 final class TrackerViewController: UIViewController {
     
     // MARK: - Public Properties
@@ -93,10 +97,7 @@ final class TrackerViewController: UIViewController {
         setupConstraints()
         
         trackerStore.delegate = self
-        updateCategories()
         updateCompletedTrackers()
-        pictureStackView.isHidden = !visibleCategories.isEmpty
-        
         trackerCollectionView.reloadData()
         filterDataByDate()
         createDatePicker.addTarget(self, action: #selector(datePickerChanged), for: .valueChanged)
@@ -144,36 +145,32 @@ final class TrackerViewController: UIViewController {
     
     private func filterDataByDate() {
         let calendar = Calendar.current
-        let filterWeekDay = (calendar.component(.weekday, from: currentDate) + 5) % 7
-        filterData { tracker in
-            tracker.mySchedule.isEmpty || tracker.mySchedule.contains { weekDay in
-                return weekDay.rawValue == filterWeekDay
-            }
+        currentDate = createDatePicker.date
+        trackerStore.updateDayOfWeekPredicate(for: currentDate)
+        trackerStore.applyPredicate()
+        if trackerStore.numberOfSections() == 0 {
+            pictureStackView.isHidden = false
+        } else {
+            pictureStackView.isHidden = true
         }
+        trackerCollectionView.reloadData()
     }
     
     private func filterData(filteringСondition:(Tracker)->(Bool)) {
         visibleCategories = categories.map { trackerCategory in
             TrackerCategory(title: trackerCategory.title,
-                            trackers: trackerCategory.trackers.filter { filteringСondition($0) })
-        }.filter { $0.trackers.count > 0 }
-        pictureStackView.isHidden = !visibleCategories.isEmpty
+                            trackers: trackerCategory.trackers.filter { filteringСondition($0) })}.filter {
+                $0.trackers.count > 0 }
     }
     
     private func filters() {
         if let filterText = searchController.searchBar.searchTextField.text?.lowercased(), filterText.count > 0 {
-            filterData { tracker in
-                tracker.name.lowercased().hasPrefix(filterText)
-            }
+            trackerStore.updateNameFilter(nameFilter: filterText)
         } else {
+            trackerStore.updateNameFilter(nameFilter: nil)
             filterDataByDate()
         }
         trackerCollectionView.reloadData()
-    }
-    
-    private func updateCategories() {
-        visibleCategories = categories
-        categories = trackerStore.trackers.map { TrackerCategory(title: "Категория", trackers: [$0])}
     }
     
     private func updateCompletedTrackers() {
@@ -186,7 +183,9 @@ final class TrackerViewController: UIViewController {
     
     @objc private func datePickerChanged(sender: UIDatePicker) {
         currentDate = createDatePicker.date
+        trackerStore.updateDayOfWeekPredicate(for:currentDate)
         filters()
+        trackerCollectionView.reloadData()
     }
     
     @objc private func addTrackerButtonTapped() {
@@ -204,10 +203,10 @@ final class TrackerViewController: UIViewController {
     }
 }
 
-// MARK: TrackerCreatirDelegate
+// MARK: TrackerCreatorDelegate
 extension TrackerViewController: TrackerCreatorDelegate {
-    func newTrackerCreated(_ tracker: Tracker) {
-        let newCategory = TrackerCategory(title: "Категория", trackers: [tracker])
+    func newTrackerCreated(_ tracker: Tracker, category: String?) {
+        let newCategory = TrackerCategory(title: category ?? "Новая категория", trackers: [tracker])
         categories.append(newCategory)
         filters()
         trackerCollectionView.reloadData()
@@ -221,11 +220,11 @@ extension TrackerViewController: TrackerCreatorDelegate {
 // MARK: UICollectionViewDataSource
 extension TrackerViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        visibleCategories.count
+        return trackerStore.numberOfSections()
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        visibleCategories[section].trackers.count
+        return trackerStore.numberOfRows(at: section)
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -233,24 +232,23 @@ extension TrackerViewController: UICollectionViewDataSource {
         else {
             return UICollectionViewCell()
         }
-        
-        let tracker = visibleCategories[indexPath.section].trackers[indexPath.row]
-        
-        if let dateWithoutTime = Date().deleteTime() {
-            let resCompare = Calendar.current.compare(dateWithoutTime, to: currentDate, toGranularity: .day)
-            let trackerRecordDate = completedTrackers.first { $0.id == tracker.id && Calendar.current.isDate($0.date, inSameDayAs: currentDate) }
-            let isTrackerDone = trackerRecordDate != nil
-            
-            let model = TrackerCellViewModel(name: tracker.name,
-                                             emoji: tracker.emoji,
-                                             color: tracker.color,
-                                             trackerIsDone: isTrackerDone,
-                                             doneButtonIsEnabled: resCompare == .orderedSame || resCompare == .orderedDescending,
-                                             counter:  UInt(completedTrackers.filter { $0.id == tracker.id }.count),
-                                             id: tracker.id)
-            cell.configure(model: model)
-            cell.cellTapAction = { [weak self] in
-                self?.trackerCellDelegate(id: tracker.id)
+        if let tracker = trackerStore.cellData(at: indexPath) {
+            if let dateWithoutTime = Date().deleteTime() {
+                let resCompare = Calendar.current.compare(dateWithoutTime, to: currentDate, toGranularity: .day)
+                let trackerRecordDate = completedTrackers.first { $0.id == tracker.id && Calendar.current.isDate($0.date, inSameDayAs: currentDate) }
+                let isTrackerDone = trackerRecordDate != nil
+                
+                let model = TrackerCellViewModel(name: tracker.name,
+                                                 emoji: tracker.emoji,
+                                                 color: tracker.color,
+                                                 trackerIsDone: isTrackerDone,
+                                                 doneButtonIsEnabled: resCompare == .orderedSame || resCompare == .orderedDescending,
+                                                 counter:  UInt(completedTrackers.filter { $0.id == tracker.id }.count),
+                                                 id: tracker.id)
+                cell.configure(model: model)
+                cell.cellTapAction = { [weak self] in
+                    self?.trackerCellDelegate(id: tracker.id)
+                }
             }
         }
         return cell
@@ -261,7 +259,8 @@ extension TrackerViewController: UICollectionViewDataSource {
         else {
             return UICollectionReusableView()
         }
-        view.configure(headerText: visibleCategories[indexPath.section].title)
+        let sectionTitle = trackerStore.titleForTrackerSection(section: indexPath.section)
+        view.configure(headerText: sectionTitle)
         return view
     }
 }
@@ -314,19 +313,27 @@ extension TrackerViewController: UISearchControllerDelegate {
 // MARK: TrackerStoreDelegate
 extension TrackerViewController: TrackerStoreDelegate {
     func trackerStoreDelegate() {
-        updateCategories()
         updateCompletedTrackers()
         filterDataByDate()
         trackerCollectionView.reloadData()
     }
 }
 
-// MARK: Date
-extension Date {
-    func deleteTime() -> Date? {
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.year, .month, .day], from: self)
-        return calendar.date(from: components)
+// MARK: TrackerViewControllerDataSource
+extension TrackerViewController: TrackerViewControllerDataSource {
+    func cellData(at indexPath: IndexPath) -> Tracker? {
+        return trackerStore.cellData(at: indexPath)
+    }
+    
+    func numberOfRows(at section: Int) -> Int {
+        return trackerStore.numberOfRows(at: section)
+    }
+    
+    func titleForTrackerSection(section: Int) -> String {
+        return trackerStore.titleForTrackerSection(section: section)
+    }
+    
+    func trackerStoreDidUpdate(_ trackerStore: TrackerStore) {
+        trackerCollectionView.reloadData()
     }
 }
-
