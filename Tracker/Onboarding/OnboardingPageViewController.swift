@@ -45,14 +45,6 @@ class OnboardingPageViewController: UIViewController {
     
     private var buttonAction: (() -> Void)?
     
-    lazy var pageControl: UIPageControl = {
-        let pageControl = UIPageControl()
-        pageControl.translatesAutoresizingMaskIntoConstraints = false
-        pageControl.currentPageIndicatorTintColor = .black
-        pageControl.pageIndicatorTintColor = .gray
-        return pageControl
-    }()
-    
     // MARK: - Initialization
     
     init(image: UIImage?, title: String, button: Button, pageCount: Int) {
@@ -61,7 +53,6 @@ class OnboardingPageViewController: UIViewController {
         self.titleLabel.text = title
         setupButton(button: button)
         self.button.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
-        self.pageControl.numberOfPages = pageCount
     }
     
     required init?(coder: NSCoder) {
@@ -85,7 +76,6 @@ class OnboardingPageViewController: UIViewController {
         view.addSubview(imageView)
         view.addSubview(titleLabel)
         view.addSubview(button)
-        view.addSubview(pageControl)
         
         NSLayoutConstraint.activate([
             imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -100,10 +90,7 @@ class OnboardingPageViewController: UIViewController {
             button.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             button.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             button.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
-            button.heightAnchor.constraint(equalToConstant: 60),
-            
-            pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            pageControl.bottomAnchor.constraint(equalTo: button.topAnchor, constant: -24),
+            button.heightAnchor.constraint(equalToConstant: 60)
         ])
     }
     

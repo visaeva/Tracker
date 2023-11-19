@@ -8,6 +8,7 @@
 import UIKit
 
 final class OnboardingViewConttoller: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate {
+    // MARK: - Properties
     
     lazy var pages: [UIViewController] = {
         let pageCount = 2
@@ -28,6 +29,17 @@ final class OnboardingViewConttoller: UIPageViewController, UIPageViewController
         ]
     }()
     
+    private lazy var pageControl: UIPageControl = {
+        let pageControl = UIPageControl()
+        pageControl.translatesAutoresizingMaskIntoConstraints = false
+        pageControl.numberOfPages = pages.count
+        pageControl.currentPage = 0
+        pageControl.currentPageIndicatorTintColor = .black
+        pageControl.pageIndicatorTintColor = .gray
+        return pageControl
+    }()
+    // MARK: - Initialization
+    
     init() {
         super.init(transitionStyle: .scroll, navigationOrientation: .horizontal)
     }
@@ -35,6 +47,7 @@ final class OnboardingViewConttoller: UIPageViewController, UIPageViewController
     required init?(coder: NSCoder) {
         super.init(transitionStyle: .scroll, navigationOrientation: .horizontal)
     }
+    // MARK: - View Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -44,7 +57,9 @@ final class OnboardingViewConttoller: UIPageViewController, UIPageViewController
         if let first = pages.first {
             setViewControllers([first], direction: .forward, animated: true, completion: nil)
         }
+        pageControlConstraints()
     }
+    // MARK: - Private Methods
     
     private func setupImageConstraints(imageView: UIImageView, in container: UIViewController) {
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -53,6 +68,14 @@ final class OnboardingViewConttoller: UIPageViewController, UIPageViewController
             imageView.trailingAnchor.constraint(equalTo: container.view.trailingAnchor),
             imageView.topAnchor.constraint(equalTo: container.view.topAnchor),
             imageView.bottomAnchor.constraint(equalTo: container.view.bottomAnchor),
+        ])
+    }
+    
+    private func pageControlConstraints() {
+        view.addSubview(pageControl)
+        NSLayoutConstraint.activate([
+            pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            pageControl.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -168),
         ])
     }
     
@@ -97,9 +120,7 @@ final class OnboardingViewConttoller: UIPageViewController, UIPageViewController
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
         if let currentViewController = pageViewController.viewControllers?.first,
            let currentIndex = pages.firstIndex(of: currentViewController) {
-            if let onboardingPageViewController = currentViewController as? OnboardingPageViewController {
-                onboardingPageViewController.pageControl.currentPage = currentIndex
-            }
+            pageControl.currentPage = currentIndex
         }
     }
 }
