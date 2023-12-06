@@ -407,7 +407,7 @@ class NewEventViewController: UIViewController, UITableViewDelegate  {
                                  name: name,
                                  color: colorForTracker,
                                  emoji: emojiForTracker,
-                                 mySchedule: mySchedule, records: [], isPinned: false)
+                                 mySchedule: mySchedule, records: [], isPinned: false, mainCategory: selectedCategory ?? "")
         
         do {
             switch currentMode {

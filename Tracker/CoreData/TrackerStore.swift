@@ -129,7 +129,7 @@ final class TrackerStore: NSObject {
         }
     }
     
-    func createTracker(from tracker: Tracker) throws -> TrackerCoreData {
+    func createTracker(from tracker: Tracker, category: TrackerCategoryCoreData) {
         let trackerCoreData = TrackerCoreData(context: context)
         trackerCoreData.trackerID = tracker.id
         trackerCoreData.name = tracker.name
@@ -137,10 +137,11 @@ final class TrackerStore: NSObject {
         trackerCoreData.emoji = tracker.emoji
         trackerCoreData.mySchedule = tracker.mySchedule.map { $0.rawValue }.map(String.init).joined(separator: ",")
         trackerCoreData.isPinned = tracker.isPinned
+        trackerCoreData.category = category
+        trackerCoreData.mainCategory = tracker.mainCategory
         trackerCoreData.records = []
         saveContext()
         print("Tracker created with isPinned: \(tracker.isPinned)")
-        return trackerCoreData
     }
     
     func updateTrackerCoreData(value: TrackerRecord) {
@@ -176,7 +177,8 @@ final class TrackerStore: NSObject {
               let color = trackersCoreData.color,
               let emoji = trackersCoreData.emoji,
               let myScheduleString = trackersCoreData.mySchedule,
-              let records = trackersCoreData.records
+              //   let records = trackersCoreData.records
+              let mainCategory = trackersCoreData.mainCategory
         else {
             print("Failed to retrieve necessary data from CoreData")
             throw TrackerStoreError.error }
@@ -190,7 +192,9 @@ final class TrackerStore: NSObject {
                        color: uiColorMarshalling.color(from: color),
                        emoji: emoji,
                        mySchedule: Set(mySchedule),
-                       records: [], isPinned: isPinned)
+                       records: [], isPinned: isPinned,
+                       mainCategory: mainCategory
+        )
     }
     
     func deleteTracker(with id: UUID) {
@@ -217,6 +221,7 @@ final class TrackerStore: NSObject {
             let error = error as NSError
         }
     }
+
     
     func getTracker(with id: UUID) -> Tracker? {
         let request = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")
@@ -243,7 +248,7 @@ final class TrackerStore: NSObject {
     }
     
     
-    func setIsPinned (for tracker: Tracker) {
+  /*  func setIsPinned (for tracker: Tracker) {
         guard var trackerCoreData = getTrackerCoreData(from: tracker) else {
             return
         }
@@ -251,7 +256,30 @@ final class TrackerStore: NSObject {
         trackerCoreData.isPinned.toggle()
         print("Tracker \(tracker.name) isPinned: \(trackerCoreData.isPinned)")
         saveContext()
-    }
+        delegate?.didUpdate()
+    } */
+    
+    func setIsPinned(for tracker: Tracker) {
+            guard var trackerCoreData = getTrackerCoreData(from: tracker) else {
+                return
+            }
+            print(#function, "Tracker \(tracker.name) isPinned: \(trackerCoreData.isPinned)")
+            trackerCoreData.isPinned.toggle()
+            print("Tracker \(tracker.name) isPinned: \(trackerCoreData.isPinned)")
+            if trackerCoreData.isPinned {
+                if let pinnedCategory = TrackerCategoryStore.shared.fetchedCategory(with: "Закрепленные") {
+                    pinnedCategory.addToTrackers(trackerCoreData)
+                }
+            } else {
+                let mainCategoryTitle = tracker.mainCategory
+                if !mainCategoryTitle.isEmpty,
+                    let mainCategory = TrackerCategoryStore.shared.fetchedCategory(with: mainCategoryTitle) {
+                    mainCategory.addToTrackers(trackerCoreData)
+                }
+            }
+            saveContext()
+            delegate?.didUpdate()
+        }
     
     // MARK: Private Methods
     private func saveContext() {

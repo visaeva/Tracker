@@ -15,6 +15,7 @@ struct Tracker {
     let mySchedule: Set <WeekDay>
     let records: Set <TrackerRecord>
     var isPinned: Bool
+    let mainCategory: String
 }
 
 enum WeekDay: Int, CaseIterable {

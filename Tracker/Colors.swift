@@ -9,24 +9,10 @@ import UIKit
 
 
 final class Colors {
-    let viewBackgroundColor = UIColor.systemBackground
-    
-    var navigationBarTintColor: UIColor = UIColor { (traits) -> UIColor in
-        let isDarkMode = traits.userInterfaceStyle == .dark
-        return isDarkMode ? UIColor.black : UIColor.white
-    }
-    
-    var tabBarBackgroundColor: UIColor = UIColor { (traits) -> UIColor in
-        let isDarkMode = traits.userInterfaceStyle == .dark
-        return isDarkMode ? UIColor.black : UIColor.white
-    }
-    
-    var collectionViewBackgroundColor: UIColor {
-        return UIColor { (traits) -> UIColor in
-            let isDarkMode = traits.userInterfaceStyle == .dark
-            return isDarkMode ? UIColor.black : UIColor.white
-        }
-    }
+    let viewBackgroundColor = UIColor.mainColor
+    var navigationBarTintColor = UIColor.mainColor
+    var tabBarBackgroundColor = UIColor.mainColor
+    var collectionViewBackgroundColor = UIColor.mainColor
     
     var labelTextColor: UIColor = UIColor { (traits) -> UIColor in
         let isDarkMode = traits.userInterfaceStyle == .dark
@@ -44,12 +30,14 @@ final class Colors {
             return isDarkMode ? UIColor.white : UIColor.gray
         }
     }
+    
     func searchControllerTextFieldPlaceholderAttributes() -> [NSAttributedString.Key: Any] {
         return [
             .foregroundColor: searchTextFieldColor(),
             
         ]
     }
+    
     var filterViewBackgroundColor: UIColor {
         return UIColor { (traits) -> UIColor in
             let isDarkMode = traits.userInterfaceStyle == .dark

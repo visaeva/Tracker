@@ -22,5 +22,6 @@ extension UIColor {
     static var lightBackground: UIColor { UIColor(named: "BackgroundGray") ?? .clear }
     static var blue: UIColor { UIColor(named: "Blue") ?? .clear }
     static var backgroundDark: UIColor { UIColor(named: "backgroundDark") ?? .clear }
+    static var mainColor: UIColor { UIColor(named: "mainColor") ?? .clear}
 }
 

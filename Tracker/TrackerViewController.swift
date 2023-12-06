@@ -16,7 +16,6 @@ final class TrackerViewController: UIViewController {
     // MARK: - Public Properties
     var currentDate: Date = Date()
     var trackerCategoryMap: [UUID: Int] = [:]
-    //   var pinnedCategory = TrackerCategory(title: "Закрепленные", trackers: [])
     
     // MARK: - Private Properties
     private var categories: [TrackerCategory] = []
@@ -339,32 +338,9 @@ final class TrackerViewController: UIViewController {
             discoverabilityTitle: nil,
             state: .off) { [weak self] action in
                 guard let self else { return }
-                do {
-                    
-                    let oldCategoryTitle = self.trackerCategoryStore.getCategoryTitleByTrackerID(id)
-                    
-                    if isPinned {
-                        
-                        try self.trackerCategoryStore.unpinTracker(tracker, oldCategoryTitle: oldCategoryTitle)
-                    } else {
-                        
-                        try self.trackerCategoryStore.pinTracker(tracker, oldCategoryTitle: oldCategoryTitle)
-                    }
-                } catch {
-                    print("Ошибка при изменении статуса закрепления трекера: \(error)")
-                }
+                self.trackerStore.setIsPinned(for: tracker)
+                self.trackerCollectionView.reloadData()
             }
-        
-        // self.trackerStore.setIsPinned(for: tracker)
-        //  self.trackerCollectionView.reloadData()
-        //     }
-        /*  guard let self = self else { return }
-         if self.isTrackerPinned(tracker) {
-         self.unpinTracker(tracker)
-         } else {
-         self.pinTracker(tracker)
-         }
-         }*/
         
         let editAction = UIAction(title: LocalizableStringKeys.edit) { [ weak self ] _ in
             if let trackerCategory = self?.trackerCategoryStore.getCategoryTitleByTrackerID(id) {
@@ -372,10 +348,10 @@ final class TrackerViewController: UIViewController {
                 self?.editTracker(id, category: trackerCategory)
             }
             self?.analiticsService.report(event: "click", params: ["screen": "Main", "item": "edit"])
-            
         }
         
-        let deleteAction = UIAction(title: LocalizableStringKeys.delete, image: nil, attributes: .destructive) { _ in
+        let deleteAction = UIAction(title: LocalizableStringKeys.delete, image: nil, attributes: .destructive) { [ weak self ] _ in
+            guard let self else { return }
             self.showDeleteConfirmation(id: id)
             self.analiticsService.report(event: "click", params: ["screen": "Main", "item": "delete"])
         }
@@ -686,13 +662,7 @@ extension TrackerViewController: FilterViewControllerDelegate {
 
 extension TrackerViewController {
     func isTrackerPinned(_ tracker: Tracker) -> Bool {
-        guard let trackerCoreData = trackerStore.getTrackerCoreData(from: tracker) else {
-            return false
-        }
-        if let category = trackerCoreData.category {
-            return category.titleCategory == "Закрепленные"
-        }
-        return false
+        return TrackerStore.shared.pinnedTrackers.contains(where:  { $0.id == tracker.id })
     }
 }
 

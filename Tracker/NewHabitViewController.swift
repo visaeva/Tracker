@@ -425,7 +425,7 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
                                  color: colorForTracker,
                                  emoji: emojiForTracker,
                                  mySchedule: mySchedule,
-                                 records: [], isPinned: false)
+                                 records: [], isPinned: false, mainCategory: selectedCategory ?? "")
         do {
             switch currentMode {
             case .create:
