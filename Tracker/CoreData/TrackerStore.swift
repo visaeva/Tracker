@@ -14,7 +14,7 @@ enum TrackerStoreError: Error {
 }
 
 protocol TrackerStoreDelegate: AnyObject {
-    func trackerStoreDelegate()
+    func didUpdate()
 }
 
 protocol TrackerViewControllerDataSource {
@@ -26,6 +26,7 @@ protocol TrackerViewControllerDataSource {
 final class TrackerStore: NSObject {
     
     // MARK: Public properties
+    static let shared = TrackerStore()
     weak var delegate: TrackerStoreDelegate?
     var dataSource: TrackerViewControllerDataSource?
     var insertedIndexes: IndexSet?
@@ -38,7 +39,17 @@ final class TrackerStore: NSObject {
         else { return [] }
         return trackers
     }
+    //трекеры с закреплением
+    var pinnedTrackers: [Tracker] {
+        guard let objects = self.fetchedResultController.fetchedObjects else {
+            return []
+        }
+        let pinnedTrackers = try? objects.compactMap { try self.makeTracker(from: $0) }.filter { $0.isPinned }
+        return pinnedTrackers ?? []
+    }
     
+    
+    var statisticViewModel: StatisticViewModel?
     // MARK: - Private Properties
     private var currentNameFilter: String?
     private var filterWeekDay: Int = 0
@@ -46,8 +57,9 @@ final class TrackerStore: NSObject {
     private let context: NSManagedObjectContext
     private let uiColorMarshalling = UIColorMarshalling()
     
-    private lazy var fetchedResultController: NSFetchedResultsController<TrackerCoreData> = {
+    lazy var fetchedResultController: NSFetchedResultsController<TrackerCoreData> = {
         let request = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")
+        
         let sortDescriptor = NSSortDescriptor(keyPath: \TrackerCoreData.category?.titleCategory, ascending: true)
         request.sortDescriptors = [sortDescriptor]
         let frc = NSFetchedResultsController(fetchRequest: request,
@@ -58,6 +70,7 @@ final class TrackerStore: NSObject {
         frc.delegate = self
         return frc
     }()
+    
     
     // MARK: - Initializers
     convenience override init() {
@@ -106,6 +119,7 @@ final class TrackerStore: NSObject {
         if let nameFilter = currentNameFilter, !nameFilter.isEmpty {
             predicates.append(NSPredicate(format: "name CONTAINS[c] %@", nameFilter))
         }
+        
         let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
         fetchedResultController.fetchRequest.predicate = compoundPredicate
         do {
@@ -122,8 +136,10 @@ final class TrackerStore: NSObject {
         trackerCoreData.color = uiColorMarshalling.hexString(from: tracker.color)
         trackerCoreData.emoji = tracker.emoji
         trackerCoreData.mySchedule = tracker.mySchedule.map { $0.rawValue }.map(String.init).joined(separator: ",")
+        trackerCoreData.isPinned = tracker.isPinned
         trackerCoreData.records = []
         saveContext()
+        print("Tracker created with isPinned: \(tracker.isPinned)")
         return trackerCoreData
     }
     
@@ -141,7 +157,17 @@ final class TrackerStore: NSObject {
             trackerRecording.date = value.date
             tracker.addToRecords(trackerRecording)
             saveContext()
+            notifyStatisticsModel()
         }
+    }
+    
+    
+    private func notifyStatisticsModel() {
+        statisticViewModel?.viewWillAppear()
+    }
+    
+    func setStatisticViewModel(_ viewModel: StatisticViewModel) {
+        statisticViewModel = viewModel
     }
     
     func makeTracker(from trackersCoreData: TrackerCoreData) throws -> Tracker {
@@ -157,12 +183,14 @@ final class TrackerStore: NSObject {
         
         let mySchedule = myScheduleString.split(separator: ",").compactMap { Int($0) }.compactMap { WeekDay(rawValue: $0) }
         
+        let isPinned = trackersCoreData.isPinned
+        
         return Tracker(id: id,
                        name: name,
                        color: uiColorMarshalling.color(from: color),
                        emoji: emoji,
                        mySchedule: Set(mySchedule),
-                       records: [])
+                       records: [], isPinned: isPinned)
     }
     
     func deleteTracker(with id: UUID) {
@@ -190,6 +218,41 @@ final class TrackerStore: NSObject {
         }
     }
     
+    func getTracker(with id: UUID) -> Tracker? {
+        let request = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")
+        request.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCoreData.trackerID), id.uuidString)
+        
+        guard let trackerCoreData = try? context.fetch(request).first else {
+            return nil
+        }
+        do {
+            return try makeTracker(from: trackerCoreData)
+        } catch {
+            print("Error making Tracker from CoreData: \(error)")
+            return nil
+        }
+    }
+    
+    func getTrackerCoreData(from tracker: Tracker) -> TrackerCoreData? {
+        let request = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")
+        request.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCoreData.trackerID), tracker.id.uuidString)
+        guard let trackerCoreData = try? context.fetch(request).first else {
+            return nil
+        }
+        return trackerCoreData
+    }
+    
+    
+    func setIsPinned (for tracker: Tracker) {
+        guard var trackerCoreData = getTrackerCoreData(from: tracker) else {
+            return
+        }
+        print(#function, "Tracker \(tracker.name) isPinned: \(trackerCoreData.isPinned)")
+        trackerCoreData.isPinned.toggle()
+        print("Tracker \(tracker.name) isPinned: \(trackerCoreData.isPinned)")
+        saveContext()
+    }
+    
     // MARK: Private Methods
     private func saveContext() {
         do {
@@ -209,9 +272,7 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
     }
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        if let delegate = delegate {
-            delegate.trackerStoreDelegate()
-        }
+        delegate?.didUpdate()
         insertedIndexes = nil
         deletedIndexes = nil
     }
@@ -221,22 +282,23 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
         didChange anObject: Any,
         at indexPath: IndexPath?,
         for type: NSFetchedResultsChangeType,
-        newIndexPath: IndexPath?)
-    { switch type {
-    case .delete where indexPath != nil:
-        deletedIndexes?.insert(indexPath!.item)
-    case .insert where newIndexPath != nil:
-        insertedIndexes?.insert(newIndexPath!.item)
-    default:
-        break
-    }
+        newIndexPath: IndexPath?
+    ){
+        switch type {
+        case .delete where indexPath != nil:
+            deletedIndexes?.insert(indexPath!.item)
+        case .insert where newIndexPath != nil:
+            insertedIndexes?.insert(newIndexPath!.item)
+        default:
+            break
+        }
     }
 }
 
 // MARK: TrackerViewControllerDataSource
 extension TrackerStore: TrackerViewControllerDataSource {
     func numberOfSections() -> Int {
-        return fetchedResultController.sections?.count ?? 0
+        fetchedResultController.sections?.count ?? 0
     }
     
     func cellData(at indexPath: IndexPath) -> Tracker? {
@@ -244,11 +306,63 @@ extension TrackerStore: TrackerViewControllerDataSource {
     }
     
     func numberOfRows(at section: Int) -> Int {
-        return fetchedResultController.sections?[section].numberOfObjects ?? 0
+        fetchedResultController.sections?[section].numberOfObjects ?? 0
     }
     
     func titleForTrackerSection(section: Int) -> String {
-        return fetchedResultController.sections?[section].name ?? ""
+        fetchedResultController.sections?[section].name ?? ""
     }
+}
+
+
+extension TrackerStore {
+    func filterForToday() {
+        let currentDate = Date().deleteTime()
+        let datePredicate = NSPredicate(format: "ANY records.date == %@", currentDate! as NSDate)
+        fetchedResultController.fetchRequest.predicate = datePredicate
+        
+        
+        do {
+            try fetchedResultController.performFetch()
+        } catch {
+            print("Error performing fetch: \(error)")
+        }
+    }
+    
+    func filterCompleted(for date: Date) {
+        let completedPredicate = NSPredicate(format: "ANY records.date == %@", date as NSDate)
+        fetchedResultController.fetchRequest.predicate = completedPredicate
+        
+        do {
+            try fetchedResultController.performFetch()
+        } catch {
+            print("Error performing fetch: \(error)")
+        }
+    }
+    
+    
+    func filterNotCompleted(for date: Date) {
+        let currentFilterWeekDay = (Calendar.current.component(.weekday, from: date) + 5) % 7
+        let notCompletedPredicate = NSPredicate(format: "SUBQUERY(records, $record, $record.date == %@).@count == 0 AND mySchedule CONTAINS[c] %@", date as NSDate, "\(currentFilterWeekDay)")
+        fetchedResultController.fetchRequest.predicate = notCompletedPredicate
+        
+        do {
+            try fetchedResultController.performFetch()
+            print("Filter not completed result count: \(fetchedResultController.sections?.first?.numberOfObjects ?? 0)")
+        } catch {
+            print("Error performing fetch: \(error)")
+        }
+    }
+    
+    func clearFilters() {
+        fetchedResultController.fetchRequest.predicate = nil
+        
+        do {
+            try fetchedResultController.performFetch()
+        } catch {
+            print("Error performing fetch: \(error)")
+        }
+    }
+    
 }
 

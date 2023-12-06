@@ -14,7 +14,7 @@ final class CreateCategoryViewController: UIViewController{
     // MARK: - Private Properties
     private let topLabel: UILabel = {
         let label = UILabel()
-        label.text = "Новая категория"
+        label.text = LocalizableStringKeys.topLabelCategory
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         return label
@@ -23,7 +23,7 @@ final class CreateCategoryViewController: UIViewController{
     private let nameTextField: UITextField = {
         let textField = UITextField()
         textField.translatesAutoresizingMaskIntoConstraints = false
-        textField.placeholder = "Введите название категории"
+        textField.placeholder = LocalizableStringKeys.nameTextFieldCategory
         textField.clearButtonMode = .always
         textField.backgroundColor = .darkBackground
         textField.layer.cornerRadius = 16
@@ -38,7 +38,7 @@ final class CreateCategoryViewController: UIViewController{
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         button.backgroundColor = .white
-        button.setTitle("Готово", for: .normal)
+        button.setTitle(LocalizableStringKeys.doneButton, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .lightBackground
         button.setTitleColor(.white, for: .normal)

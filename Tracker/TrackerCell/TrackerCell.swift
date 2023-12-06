@@ -27,6 +27,7 @@ final class TrackerCell: UICollectionViewCell {
             updateDoneButton()
         }
     }
+    private let analiticsService = AnalyticsService()
     
     private func updateTrackerView() {
         trackerView.backgroundColor = viewModel?.color
@@ -35,7 +36,9 @@ final class TrackerCell: UICollectionViewCell {
     private func updateLabels() {
         nameLabel.text = viewModel?.name ?? ""
         emojiLabel.text = viewModel?.emoji ?? ""
-        counterLabel.text = "\(viewModel?.counter ?? 0) \(viewModel?.counter.days() ?? "")"
+        let numberOfDays = viewModel?.counter ?? 0
+        let formattedString = String.localizedStringWithFormat(NSLocalizedString("numberOfTasks", comment: ""), numberOfDays)
+        counterLabel.text = formattedString
     }
     
     private func updateDoneButton() {
@@ -51,7 +54,7 @@ final class TrackerCell: UICollectionViewCell {
         doneButton.setImage(image?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
     }
     
-    private lazy var trackerView: UIView = {
+    lazy var trackerView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.layer.cornerRadius = 16
@@ -106,6 +109,14 @@ final class TrackerCell: UICollectionViewCell {
         return button
     }()
     
+    /*  private lazy var pinImage : UIImageView = {
+     var view = UIImageView()
+     guard let image = UIImage(named: "pin") else { return view }
+     view.image = image
+     view.translatesAutoresizingMaskIntoConstraints = false
+     return view
+     }()*/
+    
     // MARK: - Initializers
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -129,6 +140,7 @@ final class TrackerCell: UICollectionViewCell {
         contentView.addSubview(managementView)
         trackerView.addSubview(nameLabel)
         trackerView.addSubview(emojiView)
+        // trackerView.addSubview(pinImage)
         emojiView.addSubview(emojiLabel)
         managementView.addSubview(counterLabel)
         managementView.addSubview(doneButton)
@@ -165,16 +177,22 @@ final class TrackerCell: UICollectionViewCell {
             
             counterLabel.leadingAnchor.constraint(equalTo: managementView.leadingAnchor, constant: 12),
             counterLabel.topAnchor.constraint(equalTo: managementView.topAnchor, constant: 16),
-            counterLabel.trailingAnchor.constraint(equalTo: doneButton.leadingAnchor, constant: -8)
+            counterLabel.trailingAnchor.constraint(equalTo: doneButton.leadingAnchor, constant: -8),
+            
+            /* pinImage.heightAnchor.constraint(equalToConstant: 24),
+             pinImage.widthAnchor.constraint(equalToConstant: 24),
+             pinImage.topAnchor.constraint(equalTo: trackerView.topAnchor,constant: 12),
+             pinImage.trailingAnchor.constraint(equalTo: trackerView.trailingAnchor, constant: -12),*/
         ])
     }
     
     @objc func doneButtonTapped() {
         cellTapAction?()
+        analiticsService.report(event: "click", params: ["screen": "Main", "item": "track"])
     }
 }
 // MARK: UInt
-extension UInt {
+/*extension UInt {
     func days() -> String {
         let secondDigitFromEnd = (self / 10) % 10
         let lastDigit = self % 10
@@ -188,4 +206,4 @@ extension UInt {
         return ""
     }
 }
-
+*/

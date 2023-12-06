@@ -105,6 +105,7 @@ final class TrackerRecordStore: NSObject {
         }
     }
     
+    
     func isTrackerCompleted(trackerId: UUID, date: Date) -> Bool {
         let request = NSFetchRequest<TrackerRecordCoreData>(entityName: "TrackerRecordCoreData")
         request.predicate = NSPredicate(format: "%K == %@ AND %K == %@",
@@ -117,6 +118,13 @@ final class TrackerRecordStore: NSObject {
             return false
         }
         return !trackerRecords.isEmpty
+    }
+    
+    func loadCompletedTrackers() throws -> [TrackerRecord] {
+        let request = NSFetchRequest<TrackerRecordCoreData>(entityName: "TrackerRecordCoreData")
+        let recordsCoreData = try context.fetch(request)
+        let records = try recordsCoreData.map { try makeTrackerRecord(from: $0) }
+        return records
     }
 }
 

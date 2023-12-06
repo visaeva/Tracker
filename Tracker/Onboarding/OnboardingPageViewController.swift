@@ -25,7 +25,7 @@ class OnboardingPageViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.numberOfLines = 2
+        label.numberOfLines = 0
         label.font = UIFont.systemFont(ofSize: 32, weight: .bold)
         label.textAlignment = .center
         label.textColor = .black
