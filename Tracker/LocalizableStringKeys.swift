@@ -72,6 +72,9 @@ enum LocalizableStringKeys {
     static let bestPeriod = "bestPeriod".localised()
     static let idealDays = "idealDays".localised()
     static let averageValue = "averageValue".localised()
+    static let pin = "pin".localised()
+    static let pinned = "pinned".localised()
+    static let unpin = "unpin".localised()
 }
 
 extension String {

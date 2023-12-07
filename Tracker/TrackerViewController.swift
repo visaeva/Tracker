@@ -333,7 +333,7 @@ final class TrackerViewController: UIViewController {
             return []
         }
         let isPinned = isTrackerPinned(tracker)
-        let pinActionTitle = isPinned ? "Открепить" : "Закрепить"
+        let pinActionTitle = isPinned ? LocalizableStringKeys.unpin : LocalizableStringKeys.pinned
         let pinAction = UIAction(
             title: pinActionTitle,
             image: nil,

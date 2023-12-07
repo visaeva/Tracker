@@ -55,6 +55,9 @@
 "bestPeriod" = "Best period";
 "idealDays" = "Ideal days";
 "averageValue" = "Average Value";
+"pin" = "Pin";
+"pinned" = "Pin";
+"unpin" = "Unpin";
 
 // "Расписание"
 "monday" = "Monday";

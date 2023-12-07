@@ -251,7 +251,7 @@ final class TrackerStore: NSObject {
         }
         trackerCoreData.isPinned.toggle()
         if trackerCoreData.isPinned {
-            if let pinnedCategory = TrackerCategoryStore.shared.fetchedCategory(with: "Закрепленные") {
+            if let pinnedCategory = TrackerCategoryStore.shared.fetchedCategory(with: LocalizableStringKeys.pin) {
                 pinnedCategory.addToTrackers(trackerCoreData)
             }
         } else {

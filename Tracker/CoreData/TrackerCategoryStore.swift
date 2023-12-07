@@ -40,7 +40,7 @@ class TrackerCategoryStore: NSObject {
               var categories = try? objects.map({ try self.makeCategories(from: $0) })
         else { return [] }
         
-        categories.removeAll { $0.title == "Закрепленные" }
+        categories.removeAll { $0.title == LocalizableStringKeys.pin }
         
         return categories
     }
@@ -102,7 +102,7 @@ class TrackerCategoryStore: NSObject {
     }
     
     func createPinCategory() {
-        let name = "Закрепленные"
+        let name = LocalizableStringKeys.pin
         if let fetchedNewCategory = fetchedCategory(with: name) {
         } else {
             guard let entity = NSEntityDescription.entity(forEntityName: "TrackerCategoryCoreData", in: context) else { return }
