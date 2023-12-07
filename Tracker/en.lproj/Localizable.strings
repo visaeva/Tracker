@@ -15,6 +15,7 @@
 
 "statisticTabBar" = "Statistic";
 "pictureText" = "What will we track?";
+"statisticText" = "There's nothing to analyze yet";
 "topLabelCreator" = "Creating a tracker";
 "habitButton" = "Habit";
 "eventButton" = "Irregular event";
