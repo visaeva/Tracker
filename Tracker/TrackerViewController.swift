@@ -58,7 +58,6 @@ final class TrackerViewController: UIViewController {
             datePicker.calendar = calendar
             datePicker.calendar.firstWeekday = 1
         }
-        
         return datePicker
     }()
     
@@ -160,7 +159,6 @@ final class TrackerViewController: UIViewController {
         view.addGestureRecognizer(tapGesture)
         
         updateFilterButtonVisibility()
-        
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -240,6 +238,7 @@ final class TrackerViewController: UIViewController {
         trackerCollectionView.reloadData()
     }
     
+    
     private func placeholderForOtherTrackers() {
         if trackerStore.numberOfSections() > 0 && trackerStore.numberOfRows(at: 0) > 0 {
             pictureSearchView.isHidden = true
@@ -249,7 +248,6 @@ final class TrackerViewController: UIViewController {
             pictureStackView.isHidden = true
         }
         filterButton.isHidden = !areFiltersApplied
-        
         trackerCollectionView.reloadData()
     }
     
@@ -288,7 +286,6 @@ final class TrackerViewController: UIViewController {
     
     private func applyFilters() {
         filters()
-        
         switch  currentFilter {
         case "Все трекеры":
             placeholderForAllTrackers()
@@ -303,12 +300,11 @@ final class TrackerViewController: UIViewController {
             currentFilter = LocalizableStringKeys.allTrackers
             
         case "Завершенные":
-            placeholderForOtherTrackers()
             trackerStore.filterCompleted(for: createDatePicker.date.deleteTime() ?? Date())
-            
-        case "Не завершенные":
             placeholderForOtherTrackers()
+        case "Не завершенные":
             trackerStore.filterNotCompleted(for: createDatePicker.date.deleteTime() ?? Date())
+            placeholderForOtherTrackers()
         default:
             break
         }
@@ -333,7 +329,6 @@ final class TrackerViewController: UIViewController {
     }
     
     private func createCustomActions(id: UUID) -> [UIAction] {
-        
         guard let tracker = trackerStore.getTracker(with: id) else {
             return []
         }
@@ -390,6 +385,7 @@ final class TrackerViewController: UIViewController {
     private func deleteTracker(_ id: UUID) {
         trackerStore.deleteTracker(with: id)
         didUpdate()
+        updateFilterButtonVisibility()
         trackerCollectionView.reloadData()
     }
     
@@ -628,6 +624,7 @@ extension TrackerViewController: TrackerViewControllerDataSource {
     }
 }
 
+// MARK: UICollectionViewDelegate, UIContextMenuInteractionDelegate
 extension TrackerViewController: UICollectionViewDelegate, UIContextMenuInteractionDelegate  {
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         guard let cell = collectionView.cellForItem(at: indexPath) as? TrackerCell,
@@ -661,6 +658,7 @@ extension TrackerViewController: UICollectionViewDelegate, UIContextMenuInteract
     }
 }
 
+// MARK: FilterViewControllerDelegate
 extension TrackerViewController: FilterViewControllerDelegate {
     func didSelectFilter(_ filters: String) {
         self.currentFilter = filters

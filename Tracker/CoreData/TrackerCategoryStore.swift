@@ -112,7 +112,6 @@ class TrackerCategoryStore: NSObject {
             
             categoryEntity.trackers = NSSet(array: [])
             saveContext()
-            print(#function, entity)
         }
     }
     
@@ -158,11 +157,8 @@ class TrackerCategoryStore: NSObject {
             existingTracker.color = uiColorMarshalling.hexString(from: tracker.color)
             existingTracker.emoji = tracker.emoji
             existingTracker.mySchedule = tracker.mySchedule.map { $0.rawValue }.map(String.init).joined(separator: ",")
-            
             try context.save()
-            print("Tracker updated successfully")
         } catch {
-            print("Ошибка при обновлении трекера: \(error)")
             throw TrackerCategoryStoreError.errorCategoryModel
         }
     }

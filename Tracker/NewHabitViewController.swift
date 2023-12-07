@@ -189,7 +189,6 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         return label
     }()
     
-    
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false

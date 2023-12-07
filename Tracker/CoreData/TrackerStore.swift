@@ -250,7 +250,6 @@ final class TrackerStore: NSObject {
             return
         }
         trackerCoreData.isPinned.toggle()
-        print("Tracker \(tracker.name) isPinned: \(trackerCoreData.isPinned)")
         if trackerCoreData.isPinned {
             if let pinnedCategory = TrackerCategoryStore.shared.fetchedCategory(with: "Закрепленные") {
                 pinnedCategory.addToTrackers(trackerCoreData)
