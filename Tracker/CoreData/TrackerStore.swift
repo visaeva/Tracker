@@ -39,7 +39,7 @@ final class TrackerStore: NSObject {
         else { return [] }
         return trackers
     }
-    //трекеры с закреплением
+    
     var pinnedTrackers: [Tracker] {
         guard let objects = self.fetchedResultController.fetchedObjects else {
             return []
@@ -47,7 +47,6 @@ final class TrackerStore: NSObject {
         let pinnedTrackers = try? objects.compactMap { try self.makeTracker(from: $0) }.filter { $0.isPinned }
         return pinnedTrackers ?? []
     }
-    
     
     var statisticViewModel: StatisticViewModel?
     // MARK: - Private Properties
@@ -199,15 +198,23 @@ final class TrackerStore: NSObject {
     
     func deleteTracker(with id: UUID) {
         print("Deleting Tracker with id: \(id)")
-        let request = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "TrackerCoreData")
         request.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCoreData.trackerID), id.uuidString)
-        guard let trackers = try? context.fetch(request) else {
-            assertionFailure("Enabled to fetch(request)")
-            return
-        }
-        if let trackerDelete = trackers.first {
-            context.delete(trackerDelete)
+        do {
+            let results = try context.fetch(request)
+            for object in results {
+                if let trackerObject = object as? TrackerCoreData {
+                    if let records = trackerObject.records {
+                        for case let record as TrackerRecordCoreData in records {
+                            context.delete(record)
+                        }
+                    }
+                    context.delete(trackerObject)
+                }
+            }
             saveContext()
+        } catch {
+            print("Error fetching and deleting trackers: \(error)")
         }
     }
     
@@ -221,12 +228,10 @@ final class TrackerStore: NSObject {
             let error = error as NSError
         }
     }
-
     
     func getTracker(with id: UUID) -> Tracker? {
         let request = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")
         request.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCoreData.trackerID), id.uuidString)
-        
         guard let trackerCoreData = try? context.fetch(request).first else {
             return nil
         }
@@ -247,39 +252,37 @@ final class TrackerStore: NSObject {
         return trackerCoreData
     }
     
-    
-  /*  func setIsPinned (for tracker: Tracker) {
+    func setIsPinned(for tracker: Tracker) {
         guard var trackerCoreData = getTrackerCoreData(from: tracker) else {
             return
         }
         print(#function, "Tracker \(tracker.name) isPinned: \(trackerCoreData.isPinned)")
         trackerCoreData.isPinned.toggle()
         print("Tracker \(tracker.name) isPinned: \(trackerCoreData.isPinned)")
+        if trackerCoreData.isPinned {
+            if let pinnedCategory = TrackerCategoryStore.shared.fetchedCategory(with: "Закрепленные") {
+                pinnedCategory.addToTrackers(trackerCoreData)
+            }
+        } else {
+            let mainCategoryTitle = tracker.mainCategory
+            if !mainCategoryTitle.isEmpty,
+               let mainCategory = TrackerCategoryStore.shared.fetchedCategory(with: mainCategoryTitle) {
+                mainCategory.addToTrackers(trackerCoreData)
+            }
+        }
         saveContext()
         delegate?.didUpdate()
-    } */
+    }
     
-    func setIsPinned(for tracker: Tracker) {
-            guard var trackerCoreData = getTrackerCoreData(from: tracker) else {
-                return
-            }
-            print(#function, "Tracker \(tracker.name) isPinned: \(trackerCoreData.isPinned)")
-            trackerCoreData.isPinned.toggle()
-            print("Tracker \(tracker.name) isPinned: \(trackerCoreData.isPinned)")
-            if trackerCoreData.isPinned {
-                if let pinnedCategory = TrackerCategoryStore.shared.fetchedCategory(with: "Закрепленные") {
-                    pinnedCategory.addToTrackers(trackerCoreData)
-                }
-            } else {
-                let mainCategoryTitle = tracker.mainCategory
-                if !mainCategoryTitle.isEmpty,
-                    let mainCategory = TrackerCategoryStore.shared.fetchedCategory(with: mainCategoryTitle) {
-                    mainCategory.addToTrackers(trackerCoreData)
-                }
-            }
-            saveContext()
-            delegate?.didUpdate()
+    func getMainCategoryByTrackerID(_ trackerID: UUID) -> String? {
+        guard let objects = self.fetchedResultController.fetchedObjects else {
+            return nil
         }
+        if let coreDataTracker = objects.first(where: { $0.trackerID == trackerID }) {
+            return coreDataTracker.mainCategory
+        }
+        return nil
+    }
     
     // MARK: Private Methods
     private func saveContext() {
@@ -376,7 +379,6 @@ extension TrackerStore {
         
         do {
             try fetchedResultController.performFetch()
-            print("Filter not completed result count: \(fetchedResultController.sections?.first?.numberOfObjects ?? 0)")
         } catch {
             print("Error performing fetch: \(error)")
         }
@@ -391,6 +393,5 @@ extension TrackerStore {
             print("Error performing fetch: \(error)")
         }
     }
-    
 }
 

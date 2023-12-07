@@ -343,9 +343,14 @@ final class TrackerViewController: UIViewController {
             }
         
         let editAction = UIAction(title: LocalizableStringKeys.edit) { [ weak self ] _ in
-            if let trackerCategory = self?.trackerCategoryStore.getCategoryTitleByTrackerID(id) {
-                
-                self?.editTracker(id, category: trackerCategory)
+            if tracker.isPinned {
+                if let trackerCategory = self?.trackerCategoryStore.getCategoryTitleByTrackerID(id) {
+                    self?.editTracker(id, category: trackerCategory)
+                }
+            } else {
+                if let mainCategory = self?.trackerStore.getMainCategoryByTrackerID(id) {
+                    self?.editTracker(id, category: mainCategory)
+                }
             }
             self?.analiticsService.report(event: "click", params: ["screen": "Main", "item": "edit"])
         }
@@ -386,17 +391,14 @@ final class TrackerViewController: UIViewController {
     
     private func editTracker(_ id: UUID, category: String?) {
         if let tracker = trackerStore.getTracker(with: id) {
-            
             var recordsString = ""
-            
             if let trackerRecords = trackerRecordStore.trackerRecords {
                 let numberOfDays = trackerRecords
                     .filter { $0.id == id }
                     .count
                 recordsString = String.localizedStringWithFormat(
                     NSLocalizedString("numberOfTasks", comment: ""),
-                    numberOfDays
-                )
+                    numberOfDays)
             }
             let viewController: UIViewController
             if Set(WeekDay.allCases).isSubset(of: tracker.mySchedule) {
@@ -484,7 +486,6 @@ extension TrackerViewController: TrackerCreatorDelegate {
 extension TrackerViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return trackerStore.numberOfSections()
-        
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
