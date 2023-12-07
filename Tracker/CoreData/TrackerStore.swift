@@ -70,7 +70,6 @@ final class TrackerStore: NSObject {
         return frc
     }()
     
-    
     // MARK: - Initializers
     convenience override init() {
         if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
@@ -140,7 +139,6 @@ final class TrackerStore: NSObject {
         trackerCoreData.mainCategory = tracker.mainCategory
         trackerCoreData.records = []
         saveContext()
-        print("Tracker created with isPinned: \(tracker.isPinned)")
     }
     
     func updateTrackerCoreData(value: TrackerRecord) {
@@ -161,7 +159,6 @@ final class TrackerStore: NSObject {
         }
     }
     
-    
     private func notifyStatisticsModel() {
         statisticViewModel?.viewWillAppear()
     }
@@ -176,14 +173,11 @@ final class TrackerStore: NSObject {
               let color = trackersCoreData.color,
               let emoji = trackersCoreData.emoji,
               let myScheduleString = trackersCoreData.mySchedule,
-              //   let records = trackersCoreData.records
               let mainCategory = trackersCoreData.mainCategory
         else {
-            print("Failed to retrieve necessary data from CoreData")
             throw TrackerStoreError.error }
         
         let mySchedule = myScheduleString.split(separator: ",").compactMap { Int($0) }.compactMap { WeekDay(rawValue: $0) }
-        
         let isPinned = trackersCoreData.isPinned
         
         return Tracker(id: id,
@@ -197,7 +191,6 @@ final class TrackerStore: NSObject {
     }
     
     func deleteTracker(with id: UUID) {
-        print("Deleting Tracker with id: \(id)")
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: "TrackerCoreData")
         request.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCoreData.trackerID), id.uuidString)
         do {
@@ -256,7 +249,6 @@ final class TrackerStore: NSObject {
         guard var trackerCoreData = getTrackerCoreData(from: tracker) else {
             return
         }
-        print(#function, "Tracker \(tracker.name) isPinned: \(trackerCoreData.isPinned)")
         trackerCoreData.isPinned.toggle()
         print("Tracker \(tracker.name) isPinned: \(trackerCoreData.isPinned)")
         if trackerCoreData.isPinned {
@@ -352,7 +344,6 @@ extension TrackerStore {
         let datePredicate = NSPredicate(format: "ANY records.date == %@", currentDate! as NSDate)
         fetchedResultController.fetchRequest.predicate = datePredicate
         
-        
         do {
             try fetchedResultController.performFetch()
         } catch {
@@ -371,7 +362,6 @@ extension TrackerStore {
         }
     }
     
-    
     func filterNotCompleted(for date: Date) {
         let currentFilterWeekDay = (Calendar.current.component(.weekday, from: date) + 5) % 7
         let notCompletedPredicate = NSPredicate(format: "SUBQUERY(records, $record, $record.date == %@).@count == 0 AND mySchedule CONTAINS[c] %@", date as NSDate, "\(currentFilterWeekDay)")
@@ -386,7 +376,6 @@ extension TrackerStore {
     
     func clearFilters() {
         fetchedResultController.fetchRequest.predicate = nil
-        
         do {
             try fetchedResultController.performFetch()
         } catch {

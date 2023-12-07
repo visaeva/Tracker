@@ -39,14 +39,11 @@ class TrackerCategoryStore: NSObject {
         guard let objects = self.fetchedResultController.fetchedObjects,
               var categories = try? objects.map({ try self.makeCategories(from: $0) })
         else { return [] }
-
+        
         categories.removeAll { $0.title == "Закрепленные" }
-
+        
         return categories
     }
-
-    
-
     
     // MARK: - Private Properties
     
@@ -81,6 +78,7 @@ class TrackerCategoryStore: NSObject {
             fatalError("Unable to access the AppDelegate")
         }
     }
+    
     init(context: NSManagedObjectContext) {
         self.context = context
         super.init()
@@ -89,17 +87,12 @@ class TrackerCategoryStore: NSObject {
     
     // MARK: Public Methods
     func createTrackerWithCategory(tracker: Tracker, with titleCategory: String) throws {
-        // if let currentCategory = try? fetchedCategory(with: titleCategory) {
         if let currentCategory = fetchedCategory(with: titleCategory) {
             trackerStore.createTracker(from: tracker, category: currentCategory)
-            print(#function, currentCategory)
-            // currentCategory.addToTrackers(trackerCoreData)
         } else {
             let newCategory = TrackerCategoryCoreData(context: context)
             newCategory.titleCategory = titleCategory
             trackerStore.createTracker(from: tracker, category: newCategory)
-            print(#function, newCategory)
-            // newCategory.addToTrackers(trackerCoreData)
         }
         do {
             try context.save()
@@ -108,24 +101,20 @@ class TrackerCategoryStore: NSObject {
         }
     }
     
-    
     func createPinCategory() {
-      let name = "Закрепленные"
-      if let fetchedNewCategory = fetchedCategory(with: name) {
-        print(#function, "Закрепленные is already here")
-      } else {
-        guard let entity = NSEntityDescription.entity(forEntityName: "TrackerCategoryCoreData", in: context) else { return }
-        let categoryEntity = TrackerCategoryCoreData(entity: entity, insertInto: context)
-
-        categoryEntity.titleCategory = name
-         
-        categoryEntity.trackers = NSSet(array: [])
-        saveContext()
-        print(#function, entity)
-      }
+        let name = "Закрепленные"
+        if let fetchedNewCategory = fetchedCategory(with: name) {
+        } else {
+            guard let entity = NSEntityDescription.entity(forEntityName: "TrackerCategoryCoreData", in: context) else { return }
+            let categoryEntity = TrackerCategoryCoreData(entity: entity, insertInto: context)
+            
+            categoryEntity.titleCategory = name
+            
+            categoryEntity.trackers = NSSet(array: [])
+            saveContext()
+            print(#function, entity)
+        }
     }
-    
-    
     
     func createCategory(_ category: TrackerCategory) throws {
         guard let entity = NSEntityDescription.entity(forEntityName: "TrackerCategoryCoreData", in: context) else { return }
@@ -164,12 +153,12 @@ class TrackerCategoryStore: NSObject {
                 }
                 existingTracker.category = newCategory
             }
-
+            
             existingTracker.name = tracker.name
             existingTracker.color = uiColorMarshalling.hexString(from: tracker.color)
             existingTracker.emoji = tracker.emoji
             existingTracker.mySchedule = tracker.mySchedule.map { $0.rawValue }.map(String.init).joined(separator: ",")
-
+            
             try context.save()
             print("Tracker updated successfully")
         } catch {
@@ -177,19 +166,22 @@ class TrackerCategoryStore: NSObject {
             throw TrackerCategoryStoreError.errorCategoryModel
         }
     }
-
     
+    func fetchedCategory(with title: String) -> TrackerCategoryCoreData? {
+        let request = fetchedResultController.fetchRequest
+        request.predicate = NSPredicate(format: "%K == %@", argumentArray: ["titleCategory", title])
+        guard let category = try? context.fetch(request) else { return nil }
+        return category.first
+    }
     
     // MARK: Private Methods
     private func makeCategories(from trackerCategoryCoreData: TrackerCategoryCoreData) throws -> TrackerCategory {
         guard let title = trackerCategoryCoreData.titleCategory else {
             throw TrackerCategoryStoreError.errorTitle
         }
-        
         guard let trackers = trackerCategoryCoreData.trackers else {
             throw TrackerCategoryStoreError.errorCategory
         }
-        
         return TrackerCategory(title: title, trackers: trackers.compactMap { coreDataTracker -> Tracker? in
             if let coreDataTracker = coreDataTracker as? TrackerCoreData {
                 return try? trackerStore.makeTracker(from: coreDataTracker)
@@ -197,15 +189,6 @@ class TrackerCategoryStore: NSObject {
             return nil
         })
     }
-    
-    func fetchedCategory(with title: String) -> TrackerCategoryCoreData? {
-    // func fetchedCategory(with title: String) throws -> TrackerCategoryCoreData? {
-       let request = fetchedResultController.fetchRequest
-       request.predicate = NSPredicate(format: "%K == %@", argumentArray: ["titleCategory", title])
-      guard let category = try? context.fetch(request) else { return nil }
-      return category.first
-    }
-
     
     private func saveContext() {
         do {
@@ -248,11 +231,10 @@ extension TrackerCategoryStore {
                let trackers = coreDataTrackerCategory.trackers as? Set<TrackerCoreData>,
                let coreDataTracker = trackers.first(where: { $0.trackerID == trackerID }),
                let category = try? makeCategories(from: coreDataTrackerCategory) {
-
+                
                 return category.title
             }
         }
-
         return nil
     }
 }

@@ -28,7 +28,7 @@ final class TrackerViewController: UIViewController {
     private var currentFilter: String = LocalizableStringKeys.allTrackers
     private let colors = Colors()
     private let analiticsService = AnalyticsService()
-
+    
     private lazy var addTrackerButton: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem()
         barButtonItem.image = UIImage(systemName: "plus")
@@ -159,6 +159,8 @@ final class TrackerViewController: UIViewController {
         tapGesture.cancelsTouchesInView = false
         view.addGestureRecognizer(tapGesture)
         
+        updateFilterButtonVisibility()
+        
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -228,6 +230,13 @@ final class TrackerViewController: UIViewController {
         if pictureStackView.isHidden == false {
             pictureSearchView.isHidden = true
         }
+        updateFilterButtonVisibility()
+        trackerCollectionView.reloadData()
+    }
+    
+    private func updateFilterButtonVisibility() {
+        let shouldShowFilterButton = trackerStore.numberOfSections() > 0
+        filterButton.isHidden = !shouldShowFilterButton
         trackerCollectionView.reloadData()
     }
     
@@ -384,10 +393,6 @@ final class TrackerViewController: UIViewController {
         trackerCollectionView.reloadData()
     }
     
-    private func toggleTrackerPinStatus(_ id: UUID) {
-        
-    }
-    
     private func editTracker(_ id: UUID, category: String?) {
         if let tracker = trackerStore.getTracker(with: id) {
             var recordsString = ""
@@ -475,6 +480,9 @@ extension TrackerViewController: TrackerCreatorDelegate {
         filters()
         trackerCollectionView.reloadData()
         dismiss(animated: true, completion: nil)
+        updateCompletedTrackers()
+        filterDataByDate()
+        applyFilters()
     }
     
     func didSelectTrackerType(_ type: String) {
