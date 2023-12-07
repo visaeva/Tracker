@@ -57,18 +57,18 @@ final class TrackerStore: NSObject {
     private let uiColorMarshalling = UIColorMarshalling()
     
     lazy var fetchedResultController: NSFetchedResultsController<TrackerCoreData> = {
-        let request = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")
-        
-        let sortDescriptor = NSSortDescriptor(keyPath: \TrackerCoreData.category?.titleCategory, ascending: true)
-        request.sortDescriptors = [sortDescriptor]
-        let frc = NSFetchedResultsController(fetchRequest: request,
-                                             managedObjectContext: context,
-                                             sectionNameKeyPath: #keyPath(TrackerCoreData.category.titleCategory),
-                                             cacheName: nil)
-        try? frc.performFetch()
-        frc.delegate = self
-        return frc
-    }()
+            let request = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")
+            let pinnedSortDescriptor = NSSortDescriptor(keyPath: \TrackerCoreData.isPinned, ascending: false)
+            let categorySortDescriptor = NSSortDescriptor(keyPath: \TrackerCoreData.category?.titleCategory, ascending: false)
+            request.sortDescriptors = [pinnedSortDescriptor, categorySortDescriptor]
+            let frc = NSFetchedResultsController(fetchRequest: request,
+                                                 managedObjectContext: context,
+                                                 sectionNameKeyPath: #keyPath(TrackerCoreData.category.titleCategory),
+                                                 cacheName: nil)
+            try? frc.performFetch()
+            frc.delegate = self
+            return frc
+        }()
     
     // MARK: - Initializers
     convenience override init() {
