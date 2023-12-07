@@ -27,10 +27,11 @@ final class TrackerCell: UICollectionViewCell {
             updateDoneButton()
         }
     }
-    private let analiticsService = AnalyticsService()
     
+    private let analiticsService = AnalyticsService()
     private func updateTrackerView() {
         trackerView.backgroundColor = viewModel?.color
+        pinImage.isHidden = !isPinned
     }
     
     private func updateLabels() {
@@ -109,13 +110,13 @@ final class TrackerCell: UICollectionViewCell {
         return button
     }()
     
-    /*  private lazy var pinImage : UIImageView = {
-     var view = UIImageView()
-     guard let image = UIImage(named: "pin") else { return view }
-     view.image = image
-     view.translatesAutoresizingMaskIntoConstraints = false
-     return view
-     }()*/
+    private lazy var pinImage : UIImageView = {
+        var view = UIImageView()
+        guard let image = UIImage(named: "pin") else { return view }
+        view.image = image
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
     
     // MARK: - Initializers
     override init(frame: CGRect) {
@@ -140,7 +141,7 @@ final class TrackerCell: UICollectionViewCell {
         contentView.addSubview(managementView)
         trackerView.addSubview(nameLabel)
         trackerView.addSubview(emojiView)
-        // trackerView.addSubview(pinImage)
+        trackerView.addSubview(pinImage)
         emojiView.addSubview(emojiLabel)
         managementView.addSubview(counterLabel)
         managementView.addSubview(doneButton)
@@ -179,11 +180,17 @@ final class TrackerCell: UICollectionViewCell {
             counterLabel.topAnchor.constraint(equalTo: managementView.topAnchor, constant: 16),
             counterLabel.trailingAnchor.constraint(equalTo: doneButton.leadingAnchor, constant: -8),
             
-            /* pinImage.heightAnchor.constraint(equalToConstant: 24),
-             pinImage.widthAnchor.constraint(equalToConstant: 24),
-             pinImage.topAnchor.constraint(equalTo: trackerView.topAnchor,constant: 12),
-             pinImage.trailingAnchor.constraint(equalTo: trackerView.trailingAnchor, constant: -12),*/
+            pinImage.heightAnchor.constraint(equalToConstant: 24),
+            pinImage.widthAnchor.constraint(equalToConstant: 24),
+            pinImage.topAnchor.constraint(equalTo: trackerView.topAnchor,constant: 12),
+            pinImage.trailingAnchor.constraint(equalTo: trackerView.trailingAnchor, constant: -12),
         ])
+    }
+    
+    var isPinned: Bool = false {
+        didSet {
+            updateTrackerView()
+        }
     }
     
     @objc func doneButtonTapped() {
@@ -191,19 +198,3 @@ final class TrackerCell: UICollectionViewCell {
         analiticsService.report(event: "click", params: ["screen": "Main", "item": "track"])
     }
 }
-// MARK: UInt
-/*extension UInt {
-    func days() -> String {
-        let secondDigitFromEnd = (self / 10) % 10
-        let lastDigit = self % 10
-        if secondDigitFromEnd == 1 || 5...9 ~= lastDigit || lastDigit == 0 {
-            return "дней"
-        } else if lastDigit == 1 {
-            return "день"
-        } else if 2...4 ~= lastDigit   {
-            return "дня"
-        }
-        return ""
-    }
-}
-*/

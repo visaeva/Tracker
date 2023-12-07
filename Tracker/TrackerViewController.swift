@@ -28,7 +28,7 @@ final class TrackerViewController: UIViewController {
     private var currentFilter: String = LocalizableStringKeys.allTrackers
     private let colors = Colors()
     private let analiticsService = AnalyticsService()
-    
+
     private lazy var addTrackerButton: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem()
         barButtonItem.image = UIImage(systemName: "plus")
@@ -329,7 +329,6 @@ final class TrackerViewController: UIViewController {
             return []
         }
         let isPinned = isTrackerPinned(tracker)
-        
         let pinActionTitle = isPinned ? "Открепить" : "Закрепить"
         let pinAction = UIAction(
             title: pinActionTitle,
@@ -511,6 +510,7 @@ extension TrackerViewController: UICollectionViewDataSource {
                                                  counter:  UInt(completedTrackers.filter { $0.id == tracker.id }.count),
                                                  id: tracker.id)
                 cell.configure(model: model)
+                cell.isPinned = isTrackerPinned(tracker)
                 cell.cellTapAction = { [weak self] in
                     self?.trackerCellDelegate(id: tracker.id)
                 }
