@@ -14,18 +14,18 @@ final class OnboardingViewConttoller: UIPageViewController, UIPageViewController
         let pageCount = 2
         
         let buttonBlue = OnboardingPageViewController.Button(
-            title: "Вот это технологии!",
+            title: LocalizableStringKeys.buttonOnboarding,
             action: { [weak self] in self?.customButtonTapped() }
         )
         
         let buttonRed = OnboardingPageViewController.Button(
-            title: "Вот это еще технологии!",
+            title: LocalizableStringKeys.buttonOnboarding,
             action: { [weak self] in self?.customButtonTapped() }
         )
         
         return [
-            OnboardingPageViewController(image: UIImage(named: "OnboardingBlue"), title: "Отслеживайте только\n то, что хотите", button: buttonBlue, pageCount: pageCount),
-            OnboardingPageViewController(image: UIImage(named: "OnboardingRed"), title: "Даже если это\n не литры воды и йога", button: buttonRed, pageCount: pageCount)
+            OnboardingPageViewController(image: UIImage(named: "OnboardingBlue"), title: LocalizableStringKeys.onboardingPageFirst, button: buttonBlue, pageCount: pageCount),
+            OnboardingPageViewController(image: UIImage(named: "OnboardingRed"), title: LocalizableStringKeys.onboardingPageSecond, button: buttonRed, pageCount: pageCount)
         ]
     }()
     

@@ -47,6 +47,7 @@ final class TrackerRecordStore: NSObject {
             fatalError("Unable to access the AppDelegate")
         }
     }
+    
     init(context: NSManagedObjectContext) {
         self.context = context
         super.init()
@@ -117,6 +118,13 @@ final class TrackerRecordStore: NSObject {
             return false
         }
         return !trackerRecords.isEmpty
+    }
+    
+    func loadCompletedTrackers() throws -> [TrackerRecord] {
+        let request = NSFetchRequest<TrackerRecordCoreData>(entityName: "TrackerRecordCoreData")
+        let recordsCoreData = try context.fetch(request)
+        let records = try recordsCoreData.map { try makeTrackerRecord(from: $0) }
+        return records
     }
 }
 

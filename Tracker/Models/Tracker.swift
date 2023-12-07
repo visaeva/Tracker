@@ -14,6 +14,8 @@ struct Tracker {
     let emoji: String
     let mySchedule: Set <WeekDay>
     let records: Set <TrackerRecord>
+    var isPinned: Bool
+    let mainCategory: String
 }
 
 enum WeekDay: Int, CaseIterable {
@@ -27,25 +29,25 @@ enum WeekDay: Int, CaseIterable {
     
     var fullDayName: String {
         switch self {
-        case .monday: return "Понедельник"
-        case .tuesday: return "Вторник"
-        case .wednesday: return "Среда"
-        case .thursday: return "Четверг"
-        case .friday: return "Пятница"
-        case .saturday: return "Суббота"
-        case .sunday: return "Воскресенье"
+        case .monday: return LocalizableStringKeys.monday
+        case .tuesday: return LocalizableStringKeys.tuesday
+        case .wednesday: return LocalizableStringKeys.wednesday
+        case .thursday: return LocalizableStringKeys.thursday
+        case .friday: return LocalizableStringKeys.friday
+        case .saturday: return LocalizableStringKeys.saturday
+        case .sunday: return LocalizableStringKeys.sunday
         }
     }
     
     var shortDayName: String {
         switch self {
-        case .monday: return "Пн"
-        case .tuesday: return "Вт"
-        case .wednesday: return "Ср"
-        case .thursday: return "Чт"
-        case .friday: return "Пт"
-        case .saturday: return "Сб"
-        case .sunday: return "Вс"
+        case .monday: return LocalizableStringKeys.mon
+        case .tuesday: return LocalizableStringKeys.tue
+        case .wednesday: return LocalizableStringKeys.wed
+        case .thursday: return LocalizableStringKeys.thu
+        case .friday: return LocalizableStringKeys.fri
+        case .saturday: return LocalizableStringKeys.sat
+        case .sunday: return LocalizableStringKeys.sun
         }
     }
     

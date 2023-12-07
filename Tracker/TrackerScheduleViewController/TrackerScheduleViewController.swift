@@ -21,7 +21,7 @@ final class TrackersSheduleViewController: UIViewController {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Расписание"
+        label.text = LocalizableStringKeys.scheduleLabel
         label.font = UIFont.systemFont(ofSize: 17, weight: .regular)
         return label
     }()
@@ -41,7 +41,7 @@ final class TrackersSheduleViewController: UIViewController {
     private lazy var doneButton: UIButton = {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("Готово", for: .normal)
+        button.setTitle(LocalizableStringKeys.doneButton, for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = .black
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)

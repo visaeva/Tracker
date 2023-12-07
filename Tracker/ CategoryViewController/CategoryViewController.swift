@@ -31,7 +31,7 @@ class CategoryViewController: UIViewController {
     // MARK: - Private Properties
     private let topLabel: UILabel = {
         let label = UILabel()
-        label.text = "Категория"
+        label.text = LocalizableStringKeys.categoryLabel
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         return label
@@ -59,7 +59,7 @@ class CategoryViewController: UIViewController {
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         label.textColor = .black
         label.numberOfLines = 2
-        label.text = "Привычки и события можно\n объединить по смыслу"
+        label.text = LocalizableStringKeys.trackerViewCategory
         label.textAlignment = .center
         return label
     }()
@@ -68,7 +68,7 @@ class CategoryViewController: UIViewController {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         button.backgroundColor = .black
-        button.setTitle("Добавить категорию", for: .normal)
+        button.setTitle(LocalizableStringKeys.addButton, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 16

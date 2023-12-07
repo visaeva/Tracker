@@ -8,7 +8,7 @@
 import UIKit
 
 final class TabBarViewController: UITabBarController {
-    
+    var colors = Colors()
     // MARK: - View Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,8 +22,8 @@ final class TabBarViewController: UITabBarController {
         let trackerViewController = UINavigationController(rootViewController: TrackerViewController())
         let statisticViewController = UINavigationController(rootViewController: StatisticViewController())
         
-        trackerViewController.tabBarItem = UITabBarItem(title: "Трекеры", image: UIImage(named: "allTrackers"), selectedImage: nil)
-        statisticViewController.tabBarItem = UITabBarItem(title: "Статистика", image: UIImage(named: "rabbitImage"), selectedImage: nil)
+        trackerViewController.tabBarItem = UITabBarItem(title: LocalizableStringKeys.tabBarTrackers, image: UIImage(named: "allTrackers"), selectedImage: nil)
+        statisticViewController.tabBarItem = UITabBarItem(title: LocalizableStringKeys.statisticTabBar, image: UIImage(named: "rabbitImage"), selectedImage: nil)
         
         let viewControllers = [trackerViewController, statisticViewController]
         self.viewControllers = viewControllers
@@ -47,10 +47,10 @@ final class TabBarViewController: UITabBarController {
     private func setupTabBarAppearance() {
         if #available(iOS 13.0, *) {
             let tabBarAppearance = UITabBarAppearance()
-            tabBarAppearance.configureWithDefaultBackground()
-            tabBarAppearance.backgroundColor = UIColor.white
-            tabBarAppearance.shadowColor = UIColor.black
-            
+           // tabBarAppearance.configureWithDefaultBackground()
+           // tabBarAppearance.backgroundColor = UIColor.white
+           // tabBarAppearance.shadowColor = UIColor.black
+            tabBarAppearance.backgroundColor = colors.tabBarBackgroundColor
             tabBar.standardAppearance = tabBarAppearance
             
             if #available(iOS 15.0, *) {
