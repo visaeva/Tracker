@@ -112,7 +112,7 @@ final class TrackerCell: UICollectionViewCell {
     
     private lazy var pinImage : UIImageView = {
         var view = UIImageView()
-        guard let image = UIImage(named: "pin") else { return view }
+        guard let image = UIImage(named: "Pin") else { return view }
         view.image = image
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
