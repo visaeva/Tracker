@@ -34,7 +34,7 @@
 
 Верстка под iPad не предусмотрена.
 
-***Стек: UICollectionView, UITableView, SPM, Cocoapods, CoreData, Snapshot tests, MVVM, Localization, Snapkit, Swiftgen***
+***Стек: UICollectionView, UITableView, SPM, Cocoapods, CoreData, Snapshot tests, MVVM, Localization, Swiftgen***
 
 ## Скриншоты
 ![Simulator Screenshot - iPhone 15 - 2024-02-10 at 14 28 51](https://github.com/visaeva/Tracker/assets/127760695/a4e6b4cf-89f1-40bf-927f-091312dbfefa)
