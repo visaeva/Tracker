@@ -10,6 +10,7 @@ import UIKit
 class TrackerCategoryCell: UITableViewCell {
     
     // MARK: - Properties
+    private let colors = Colors()
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -43,7 +44,7 @@ class TrackerCategoryCell: UITableViewCell {
         layer.cornerRadius = 16
         layer.maskedCorners = cornerMask
         accessoryType = isSelected ? .checkmark : .none
-        self.backgroundColor = .darkBackground
+        self.backgroundColor = colors.filterViewBackgroundColor
     }
     
     // MARK: - Private Methods

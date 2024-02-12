@@ -18,6 +18,7 @@ final class TrackersSheduleViewController: UIViewController {
     var mySchedule: Set<WeekDay> = []
     
     // MARK: - Private Properties
+    private let colors = Colors()
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -26,12 +27,12 @@ final class TrackersSheduleViewController: UIViewController {
         return label
     }()
     
-    private let tableView: UITableView = {
+    private lazy var tableView: UITableView = {
         let tableView = UITableView()
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.separatorInset = .init(top: 0, left: 20, bottom: 0, right: 20)
         tableView.rowHeight = 75
-        tableView.backgroundColor = .white
+        tableView.backgroundColor = colors.viewBackgroundColor
         tableView.allowsSelection = false
         tableView.layer.cornerRadius = 16
         
@@ -42,8 +43,8 @@ final class TrackersSheduleViewController: UIViewController {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle(LocalizableStringKeys.doneButton, for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = .black
+        button.setTitleColor(colors.buttonTextColor, for: .normal)
+        button.backgroundColor = colors.labelTextColor
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.layer.cornerRadius = 16
         button.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
@@ -65,7 +66,7 @@ final class TrackersSheduleViewController: UIViewController {
     // MARK: - View Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = colors.viewBackgroundColor
         setupUI()
         setupSheduleConstraints()
     }
@@ -76,7 +77,7 @@ final class TrackersSheduleViewController: UIViewController {
         view.addSubview(tableView)
         view.addSubview(doneButton)
         
-        view.backgroundColor = .white
+        view.backgroundColor = colors.viewBackgroundColor
         tableView.dataSource = self
         tableView.register(TrackerScheduleTableView.self, forCellReuseIdentifier: "cell")
     }
@@ -117,7 +118,9 @@ extension TrackersSheduleViewController: UITableViewDataSource {
             cell.delegate = self
             if let day = WeekDay(rawValue: indexPath.row ) {
                 cell.configure(at: indexPath.row, isOn: mySchedule.contains(day))
+                cell.textLabel?.textColor = colors.labelTextColor
             }
+            cell.backgroundColor = colors.filterViewBackgroundColor
             return cell
         } else {
             return UITableViewCell()

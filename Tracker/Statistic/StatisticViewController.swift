@@ -14,15 +14,16 @@ final class StatisticViewController: UIViewController {
     var statisticViewModel: StatisticViewModel?
     private let trackerRecordStore = TrackerRecordStore()
     private let completedTrackersView = StatisticCell(name: LocalizableStringKeys.trackersCompleted)
+    private let colors = Colors()
     private var trackerStore = TrackerStore()
     
-    private var statisticLabel: UILabel = {
+    private lazy var statisticLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = LocalizableStringKeys.statisticTabBar
         label.font = UIFont.systemFont(ofSize: 34, weight: .bold)
         label.textAlignment = .center
-        label.textColor = .black
+        label.textColor = colors.labelTextColor
         return label
     }()
     
@@ -45,9 +46,9 @@ final class StatisticViewController: UIViewController {
         return stack
     }()
     
-    private let label: UILabel = {
+    private lazy var label: UILabel = {
         let label = UILabel()
-        label.textColor = .black
+        label.textColor = colors.labelTextColor
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         label.text = LocalizableStringKeys.statisticText
         label.textAlignment = .center
@@ -63,7 +64,7 @@ final class StatisticViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = colors.viewBackgroundColor
         setupUI()
         
         let trackerStore = TrackerStore()

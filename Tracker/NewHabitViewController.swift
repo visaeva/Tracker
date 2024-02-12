@@ -26,6 +26,7 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
     var trackerIdToEdit: UUID?
     var editingCategory: String?
     // MARK: - Private Properties
+    private let color = Colors()
     private let trackerCategoryStore = TrackerCategoryStore()
     private let trackerRecordStore = TrackerRecordStore()
     private let trackerStore = TrackerStore()
@@ -65,12 +66,12 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         return label
     }()
     
-    private let nameTextField: UITextField = {
+    private lazy var nameTextField: UITextField = {
         let textField = UITextField()
         textField.translatesAutoresizingMaskIntoConstraints = false
         textField.placeholder = LocalizableStringKeys.nameTextFieldTracker
         textField.clearButtonMode = .always
-        textField.backgroundColor = .darkBackground
+        textField.backgroundColor =  color.filterViewBackgroundColor
         textField.layer.cornerRadius = 16
         textField.leftViewMode = .always
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: 0))
@@ -79,10 +80,11 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         return textField
     }()
     
-    private let tableView: UITableView = {
+    private lazy var tableView: UITableView = {
         let tableView = UITableView()
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.separatorInset = .init(top: 0, left: 20, bottom: 0, right: 20)
+        tableView.separatorColor = .gray
         tableView.rowHeight = 75
         tableView.backgroundColor = .white
         tableView.layer.cornerRadius = 16
@@ -166,17 +168,21 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         return colorsCollectionView
     }()
     
-    private let emojiLabel: UILabel = {
+    private lazy var emojiLabel: UILabel = {
         let label = UILabel()
         label.text = LocalizableStringKeys.emojiLabel
+        label.textColor = color.labelTextColor
+        label.backgroundColor = color.viewBackgroundColor
         label.font = UIFont.boldSystemFont(ofSize: 19)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    private let colorLabel: UILabel = {
+    private lazy var colorLabel: UILabel = {
         let label = UILabel()
         label.text = LocalizableStringKeys.colorLabel
+        label.textColor = color.labelTextColor
+        label.backgroundColor = color.viewBackgroundColor
         label.font = UIFont.boldSystemFont(ofSize: 19)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -189,12 +195,11 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
         return label
     }()
     
-    private let scrollView: UIScrollView = {
+    private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.isScrollEnabled = true
-        scrollView.backgroundColor = .white
-        
+        scrollView.backgroundColor = color.viewBackgroundColor
         return scrollView
     }()
     
@@ -223,7 +228,7 @@ final class NewHabitViewController: UIViewController, UITableViewDelegate {
     // MARK: - View Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = color.viewBackgroundColor
         
         setupHabitUI()
         setupHabitConstraints()
@@ -468,7 +473,7 @@ extension NewHabitViewController: UITableViewDataSource {
             
             switch indexPath.row {
             case 0:
-                cell.backgroundColor = .darkBackground
+                cell.backgroundColor = color.filterViewBackgroundColor
                 cell.layer.cornerRadius = 16
                 cell.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
                 cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 400)
@@ -515,7 +520,7 @@ extension NewHabitViewController: UITableViewDataSource {
                 ])
                 
             case 1:
-                cell.backgroundColor = .darkBackground
+                cell.backgroundColor = color.filterViewBackgroundColor
                 cell.layer.cornerRadius = 16
                 cell.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
                 cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 400)

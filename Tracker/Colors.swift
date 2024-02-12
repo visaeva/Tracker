@@ -7,7 +7,6 @@
 
 import UIKit
 
-
 final class Colors {
     let viewBackgroundColor = UIColor.mainColor
     var navigationBarTintColor = UIColor.mainColor
@@ -17,6 +16,11 @@ final class Colors {
     var labelTextColor: UIColor = UIColor { (traits) -> UIColor in
         let isDarkMode = traits.userInterfaceStyle == .dark
         return isDarkMode ? UIColor.white : UIColor.black
+    }
+    
+    var buttonTextColor: UIColor = UIColor { (traits) -> UIColor in
+        let isDarkMode = traits.userInterfaceStyle == .dark
+        return isDarkMode ? UIColor.black : UIColor.white
     }
     
     static var backgroundLight = UIColor { (traits) -> UIColor in
@@ -34,7 +38,6 @@ final class Colors {
     func searchControllerTextFieldPlaceholderAttributes() -> [NSAttributedString.Key: Any] {
         return [
             .foregroundColor: searchTextFieldColor(),
-            
         ]
     }
     
