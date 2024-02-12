@@ -12,6 +12,7 @@ final class CreateCategoryViewController: UIViewController{
     var viewModel: CategoryViewModel?
     
     // MARK: - Private Properties
+    private let colors = Colors()
     private let topLabel: UILabel = {
         let label = UILabel()
         label.text = LocalizableStringKeys.topLabelCategory
@@ -20,12 +21,12 @@ final class CreateCategoryViewController: UIViewController{
         return label
     }()
     
-    private let nameTextField: UITextField = {
+    private lazy var nameTextField: UITextField = {
         let textField = UITextField()
         textField.translatesAutoresizingMaskIntoConstraints = false
         textField.placeholder = LocalizableStringKeys.nameTextFieldCategory
         textField.clearButtonMode = .always
-        textField.backgroundColor = .darkBackground
+        textField.backgroundColor =  colors.filterViewBackgroundColor
         textField.layer.cornerRadius = 16
         textField.leftViewMode = .always
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: 0))
@@ -52,7 +53,7 @@ final class CreateCategoryViewController: UIViewController{
     // MARK: - View Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = colors.viewBackgroundColor
         setupUI()
         setupConstraints()
         
@@ -97,8 +98,8 @@ final class CreateCategoryViewController: UIViewController{
     
     @objc func textFieldDidChange() {
         if let text = nameTextField.text, !text.isEmpty {
-            addButton.backgroundColor = .black
-            addButton.setTitleColor(.white, for: .normal)
+            addButton.backgroundColor = colors.labelTextColor
+            addButton.setTitleColor(colors.buttonTextColor, for: .normal)
             addButton.isEnabled = true
         } else {
             addButton.backgroundColor = .lightBackground

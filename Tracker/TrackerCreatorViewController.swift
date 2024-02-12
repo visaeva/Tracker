@@ -20,9 +20,11 @@ final class TrackerCreatorViewController: UIViewController {
     var trackerStore: TrackerStore?
     var editingTrackerId: UUID?
     // MARK: - Private Properties
-    private let topLabel: UILabel = {
+    private let colors = Colors()
+    private lazy var topLabel: UILabel = {
         let label = UILabel()
         label.text = LocalizableStringKeys.topLabelCreator
+        label.textColor = colors.labelTextColor
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         return label
@@ -33,8 +35,8 @@ final class TrackerCreatorViewController: UIViewController {
         button.setTitle(LocalizableStringKeys.habitButton, for: .normal)
         button.addTarget(self, action: #selector(habitButtonTapped), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.backgroundColor = .black
-        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = colors.labelTextColor
+        button.setTitleColor(colors.buttonTextColor, for: .normal)
         button.layer.cornerRadius = 16
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         return button
@@ -45,8 +47,8 @@ final class TrackerCreatorViewController: UIViewController {
         button.setTitle(LocalizableStringKeys.eventButton, for: .normal)
         button.addTarget(self, action: #selector(eventButtonTapped), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.backgroundColor = .black
-        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = colors.labelTextColor
+        button.setTitleColor(colors.buttonTextColor, for: .normal)
         button.layer.cornerRadius = 16
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         return button
@@ -66,7 +68,7 @@ final class TrackerCreatorViewController: UIViewController {
     // MARK: - View Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = colors.viewBackgroundColor
         
         setupCreatorUI()
         setupConstraints()

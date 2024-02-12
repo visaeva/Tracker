@@ -17,6 +17,7 @@ class CategoryViewController: UIViewController {
     weak var delegate: CategoryViewControllerDelegate?
     // MARK: Private Properties
     private let categoryCellReuseIdentifier = "categoryCell"
+    private let colors = Colors()
     
     // MARK: - Initializers
     init(viewModel: CategoryViewModel) {
@@ -29,7 +30,7 @@ class CategoryViewController: UIViewController {
     }
     
     // MARK: - Private Properties
-    private let topLabel: UILabel = {
+    private lazy var topLabel: UILabel = {
         let label = UILabel()
         label.text = LocalizableStringKeys.categoryLabel
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -57,7 +58,7 @@ class CategoryViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        label.textColor = .black
+        label.textColor = colors.labelTextColor
         label.numberOfLines = 2
         label.text = LocalizableStringKeys.trackerViewCategory
         label.textAlignment = .center
@@ -67,10 +68,10 @@ class CategoryViewController: UIViewController {
     private lazy var addButton: UIButton = {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.backgroundColor = .black
+        button.backgroundColor = colors.labelTextColor
         button.setTitle(LocalizableStringKeys.addButton, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(colors.buttonTextColor, for: .normal)
         button.layer.cornerRadius = 16
         button.contentHorizontalAlignment = .center
         button.contentVerticalAlignment = .center
@@ -93,7 +94,7 @@ class CategoryViewController: UIViewController {
     // MARK: - View Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = colors.viewBackgroundColor
         setupUI()
         setupConstraints()
         
